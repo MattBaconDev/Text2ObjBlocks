@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Text 2 Obj</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+	<div id="text-controls">
+		<input type="text" id="text-input" value="Holmesy">
+	</div>
+	<div id="font-controls">
+		<label id="font-input-label" for="font-input">Upload Font</label><span id="curr-font"></span>
+		<input type="file" id="font-input" accept=".otf,.ttf,.woff,.woff2" title="Upload Font" style="visibility: hidden;">
+	</div>
+	<svg id="svg" width="300" height="100" viewBox="0 0 160 40"></svg>
+	<button id="export-button">Export</button>
+    <canvas id="viewer-canvas"></canvas>
+	<script type="importmap">
+		{
+			"imports": {
+				"three": "https://cdn.jsdelivr.net/npm/three@0.169.0/build/three.module.js",
+				"three/addons/": "https://cdn.jsdelivr.net/npm/three@0.169.0/examples/jsm/",
+				"opentype": "https://cdnjs.cloudflare.com/ajax/libs/opentype.js/1.3.4/opentype.min.js"
+			}
+		}
+	</script>
+    <script src="script.js" type="module"></script>
+</body>
+</html>
