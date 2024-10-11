@@ -1,5 +1,6 @@
 import * as THREE from 'three';
 import { SVGLoader } from 'three/addons/loaders/SVGLoader.js';
+import * as BufferGeometryUtils from 'three/addons/utils/BufferGeometryUtils.js';
 import FontProvider from './fonts.js';
 import { enableExportScene } from './export.js';
 import { initMouse3DMover } from './mouse3dmover.js';
@@ -79,15 +80,18 @@ class App {
 
 		svgData.paths.forEach((path, i) => {
 			const shapes = SVGLoader.createShapes(path);
+			const letterGeos = [];
 			shapes.forEach((shape, j) => {
 				const geometry = new THREE.ExtrudeGeometry(shape, {
 					depth: cfg.letterDepth,
 					bevelEnabled: false,
 				});
-				const mesh = new THREE.Mesh(geometry, letterMat);
-				mesh.name = getMeshName(chars, i, j);
-				this.svgGroup.add(mesh);
+				letterGeos.push(geometry);
 			});
+			const bufferGeo = BufferGeometryUtils.mergeGeometries(letterGeos, false);
+			const letterMesh = new THREE.Mesh(bufferGeo, letterMat);
+			letterMesh.name = getMeshName(chars, i);
+			this.svgGroup.add(letterMesh);
 		});
 
 		const getObjSize = (obj) => {
@@ -229,16 +233,13 @@ function buildSVGData(text, font, previewEl = null) {
 	const svgData = svgLoader.parse('<g>' + svgPaths + '</g>');
 	return svgData;
 }
-function getMeshName(chars, pathIdx, shapeIdx) {
+function getMeshName(chars, pathIdx) {
 	const char = chars[pathIdx];
 	let name = char;
 	const multipleChars = chars.filter(c => c === char).length > 1;
 	if (multipleChars) {
 		const countSoFar = chars.slice(0, pathIdx).filter(c => c === char).length + 1;
-		name += '#' + countSoFar;
-	}
-	if (shapeIdx > 0) {
-		name += new Array(shapeIdx).fill('+').join('');
+		name += '-' + countSoFar;
 	}
 	return name;
 }
