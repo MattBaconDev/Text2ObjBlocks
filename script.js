@@ -70,18 +70,8 @@ class App {
 		}
 		const text = elements.textInput.value.trim();
 		const chars = text.split('');
-		const textSpaced = text.split('').join(' ');
 
-		const path = this.font.getPath(textSpaced, 0, 0, cfg.fontSize);
-		const paths = this.font.getPaths(textSpaced, 0, 0, cfg.fontSize).filter(p => p.commands.length);
-		const bbox = path.getBoundingBox();
-		const svgPaths = paths.map(p => p.toSVG()).join('');
-
-		elements.svg.setAttribute('viewBox', `${bbox.x1} ${bbox.y1} ${bbox.x2 - bbox.x1} ${bbox.y2 - bbox.y1}`);
-		elements.svg.innerHTML = svgPaths;
-
-		const svgLoader = new SVGLoader();
-		const svgData = svgLoader.parse(elements.svg.outerHTML);
+		const svgData = buildSVGData(text, this.font, elements.svg);
 
 		this.svgGroup = new THREE.Group();
 		const plateMat = makeMaterial(0x666666, './textures/metal.jpg', 5);
@@ -222,6 +212,23 @@ initMouse3DMover(app, elements.canvas);
 app.render();
 
 // helpers
+function buildSVGData(text, font, previewEl = null) {
+	const textSpaced = text.split('').join(' ');
+
+	const paths = font.getPaths(textSpaced, 0, 0, cfg.fontSize).filter(p => p.commands.length);
+	const svgPaths = paths.map(p => p.toSVG()).join('');
+
+	if (previewEl) {
+		const path = font.getPath(textSpaced, 0, 0, cfg.fontSize);
+		const bbox = path.getBoundingBox();
+		previewEl.setAttribute('viewBox', `${bbox.x1} ${bbox.y1} ${bbox.x2 - bbox.x1} ${bbox.y2 - bbox.y1}`);
+		previewEl.innerHTML = svgPaths;
+	}
+
+	const svgLoader = new SVGLoader();
+	const svgData = svgLoader.parse('<g>' + svgPaths + '</g>');
+	return svgData;
+}
 function getMeshName(chars, pathIdx, shapeIdx) {
 	const char = chars[pathIdx];
 	let name = char;
