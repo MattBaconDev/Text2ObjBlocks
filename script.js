@@ -5,6 +5,7 @@ import FontProvider from './fonts.js';
 import { enableExportScene } from './export.js';
 import { initMouse3DMover } from './mouse3dmover.js';
 import RenderController from './RenderController.js';
+import Interaction from './interaction.js';
 
 await import('opentype');
 
@@ -17,6 +18,8 @@ const cfg = {
 	plateXPadding: 3,
 	plateYPadding: 3,
 	centreAlign: false,
+	defaultColour: 0x666666,
+	selectedColour: 0x00ff00,
 	sensitivity: {
 		pan: 1,
 		rotate: 1,
@@ -52,10 +55,13 @@ class App {
 	fontPath = cfg.defaultFontPath;
 	fontProvider = new FontProvider(this);
 	renderController = new RenderController(this);
+	interaction = new Interaction(this);
+	plateMat = makeMaterial(cfg.defaultColour, './textures/metal.jpg', 5);
+	letterMat = makeMaterial(cfg.defaultColour);
 	constructor(container) {
 		if (!container) container = document.body;
 		this.camera = new THREE.PerspectiveCamera(25, window.innerWidth / window.innerHeight, 0.1, 1000);
-		this.canvas = document.getElementById('viewer-canvas');
+		this.canvas = elements.canvas;
 		this.renderer = new THREE.WebGLRenderer({ canvas: this.canvas, antialias: true });
 		this.renderer.setSize(window.innerWidth, window.innerHeight);
 		document.body.appendChild(this.renderer.domElement);
@@ -79,8 +85,6 @@ class App {
 		const svgData = buildSVGData(text, this.font, elements.svg);
 
 		this.svgGroup = new THREE.Group();
-		const plateMat = makeMaterial(0x666666, './textures/metal.jpg', 5);
-		const letterMat = makeMaterial(0x666666);
 
 		svgData.paths.forEach((path, i) => {
 			const shapes = SVGLoader.createShapes(path);
@@ -93,7 +97,7 @@ class App {
 				letterGeos.push(geometry);
 			});
 			const bufferGeo = BufferGeometryUtils.mergeGeometries(letterGeos, false);
-			const letterMesh = new THREE.Mesh(bufferGeo, letterMat);
+			const letterMesh = new THREE.Mesh(bufferGeo, this.letterMat.clone());
 			letterMesh.name = getMeshName(chars, i);
 			this.svgGroup.add(letterMesh);
 		});
@@ -138,16 +142,19 @@ class App {
 			const center = getObjCenter(letter);
 			const size = sizes[i];
 			const plateGeo = new THREE.BoxGeometry(size.x + cfg.plateXPadding, groupHeight + cfg.plateYPadding, cfg.plateDepth);
-			const plateMesh = new THREE.Mesh(plateGeo, plateMat);
+			const plateMesh = new THREE.Mesh(plateGeo, this.plateMat.clone());
+			plateMesh.name = `plate-${i}`;
 			const meshSize = getObjSize(plateMesh);
 			plateMesh.position.x = center.x;
 			plateMesh.position.y = svgGroupCenter.y;
 			plateMesh.position.z = (-meshSize.z/2) + 0.1;
 
 			const letterGroup = new THREE.Group();
+			letterGroup.name = 'letter_' + letter.name;
 			letterGroup.add(letter);
 			letterGroup.add(plateMesh);
 			this.svgGroup.add(letterGroup);
+			this.interaction.applySelection(letterGroup);
 		}
 
 		// Center svgGroup children to the group
@@ -162,6 +169,13 @@ class App {
 		this.svgGroup.position.add(groupCenter);
 
 		this.camera.lookAt(this.svgGroup.position);
+
+		for (const group of this.svgGroup.children) {
+			group.children[0].userData.originalScale = group.children[0].scale.clone();
+			group.children[0].userData.originalPosition = group.children[0].position.clone();
+			group.children[1].userData.originalScale = group.children[1].scale.clone();
+			group.children[1].userData.originalPosition = group.children[1].position.clone();
+		}
 
 		const light = new THREE.AmbientLight(0xffffff, 0.5, 1);
 		light.position.set(-50, 36, 15);
@@ -197,6 +211,7 @@ class App {
 			app.renderer.setSize(window.innerWidth, window.innerHeight);
 		}, false);
 
+		this.interaction.init();
 		this.initialised = true;
 	}
 }
