@@ -69,24 +69,24 @@ class App {
 			this.#_render();
 		}
 		const text = elements.textInput.value.trim();
+		const chars = text.split('');
 		const textSpaced = text.split('').join(' ');
 
-		// Create a path from the text
 		const path = this.font.getPath(textSpaced, 0, 0, cfg.fontSize);
+		const paths = this.font.getPaths(textSpaced, 0, 0, cfg.fontSize).filter(p => p.commands.length);
 		const bbox = path.getBoundingBox();
-		const svgPath = path.toSVG();
+		const svgPaths = paths.map(p => p.toSVG()).join('');
 
 		elements.svg.setAttribute('viewBox', `${bbox.x1} ${bbox.y1} ${bbox.x2 - bbox.x1} ${bbox.y2 - bbox.y1}`);
-		elements.svg.innerHTML = svgPath;
+		elements.svg.innerHTML = svgPaths;
 
 		const svgLoader = new SVGLoader();
-		const svgData = svgLoader.parse(svgPath);
+		const svgData = svgLoader.parse(elements.svg.outerHTML);
 
 		this.svgGroup = new THREE.Group();
 		const plateMat = makeMaterial(0x666666, './textures/metal.jpg', 5);
 		const letterMat = makeMaterial(0x666666);
 
-		const chars = text.split('');
 		svgData.paths.forEach((path, i) => {
 			const shapes = SVGLoader.createShapes(path);
 			shapes.forEach((shape, j) => {
@@ -95,10 +95,11 @@ class App {
 					bevelEnabled: false,
 				});
 				const mesh = new THREE.Mesh(geometry, letterMat);
-				const char = chars[j];
+				const char = chars[i];
 				const multipleChars = chars.filter(c => c === char).length > 1;
 				if (!multipleChars) mesh.name = char;
-				else mesh.name = char + '-' + (chars.slice(0, j).filter(c => c === char).length + 1);
+				else mesh.name = char + '#' + (chars.slice(0, i).filter(c => c === char).length + 1);
+				if (shapes.length > 1) mesh.name += '-' + (j + 1);
 				this.svgGroup.add(mesh);
 			});
 		});
