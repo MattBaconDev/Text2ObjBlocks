@@ -10,11 +10,10 @@ const cfg = {
 	defaultFontPath: './fonts/Gantry-Black.otf',
 	autoRotate: false,
 	fontSize: 22,
-	letterSpacing: 1,
 	letterDepth: 5,
 	plateDepth: 8,
-	plateXMult: 1.2,
-	plateYMult: 1.2,
+	plateXPadding: 3,
+	plateYPadding: 3,
 	centreAlign: false,
 	sensitivity: {
 		pan: 1,
@@ -120,23 +119,23 @@ class App {
 		const letters = Array.from(this.svgGroup.children);
 
 		const sizes = [];
-		const spacings = [];
-		const centers = [];
 
 		let lastCenterX = -1;
 		for (const letter of letters) {
 			const size = getObjSize(letter);
 			const center = getObjCenter(letter);
 			sizes.push(size);
-			spacings.push(lastCenterX === -1 ? 0 : center.x - lastCenterX);
-			centers.push(center.x);
 			lastCenterX = center.x;
 		}
 
-		const maxY = Math.max(...sizes.map(size => size.y));
-		const maxX = Math.max(...sizes.map(size => size.x));
+		const svgGroupBox = new THREE.Box3().setFromObject(this.svgGroup);
+		const svgGroupCenter = new THREE.Vector3();
+		svgGroupBox.getCenter(svgGroupCenter);
+		const svgGroupSize = new THREE.Vector3();
+		svgGroupBox.getSize(svgGroupSize);
 
 		const maxCenterY = Math.max(...letters.map(letter => getObjCenter(letter).y));
+		const groupHeight = svgGroupSize.y;
 
 		this.svgGroup.scale.y *= -1;
 		this.svgGroup.position.y = -10;
@@ -149,10 +148,11 @@ class App {
 			const size = sizes[i];
 			const yMove = maxCenterY - center.y;
 			if (cfg.centreAlign) letter.position.y += yMove;
-			const plateGeo = new THREE.BoxGeometry(size.x * cfg.plateXMult, maxY * cfg.plateYMult, cfg.plateDepth);
+			const plateGeo = new THREE.BoxGeometry(size.x + cfg.plateXPadding, groupHeight + cfg.plateYPadding, cfg.plateDepth);
 			const plateMesh = new THREE.Mesh(plateGeo, plateMat);
 			plateMesh.position.copy(center);
 			if (cfg.centreAlign) plateMesh.position.y += yMove;
+			else plateMesh.position.y = svgGroupCenter.y;
 			plateMesh.position.z -= cfg.letterDepth * 0.75;
 
 			const letterGroup = new THREE.Group();
