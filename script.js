@@ -95,11 +95,7 @@ class App {
 					bevelEnabled: false,
 				});
 				const mesh = new THREE.Mesh(geometry, letterMat);
-				const char = chars[i];
-				const multipleChars = chars.filter(c => c === char).length > 1;
-				if (!multipleChars) mesh.name = char;
-				else mesh.name = char + '#' + (chars.slice(0, i).filter(c => c === char).length + 1);
-				if (shapes.length > 1) mesh.name += '-' + (j + 1);
+				mesh.name = getMeshName(chars, i, j);
 				this.svgGroup.add(mesh);
 			});
 		});
@@ -226,6 +222,19 @@ initMouse3DMover(app, elements.canvas);
 app.render();
 
 // helpers
+function getMeshName(chars, pathIdx, shapeIdx) {
+	const char = chars[pathIdx];
+	let name = char;
+	const multipleChars = chars.filter(c => c === char).length > 1;
+	if (multipleChars) {
+		const countSoFar = chars.slice(0, pathIdx).filter(c => c === char).length + 1;
+		name += '#' + countSoFar;
+	}
+	if (shapeIdx > 0) {
+		name += new Array(shapeIdx).fill('+').join('');
+	}
+	return name;
+}
 function makeMaterial(colour = 0x666666, texture = '', bumpScale = 1) {
 	let textureObj = null;
 	if (texture) {
