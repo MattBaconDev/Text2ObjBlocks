@@ -4,6 +4,7 @@ import * as BufferGeometryUtils from 'three/addons/utils/BufferGeometryUtils.js'
 import FontProvider from './fonts.js';
 import { enableExportScene } from './export.js';
 import { initMouse3DMover } from './mouse3dmover.js';
+import RenderController from './RenderController.js';
 
 await import('opentype');
 
@@ -12,7 +13,7 @@ const cfg = {
 	autoRotate: false,
 	fontSize: 22,
 	letterDepth: 5,
-	plateDepth: 8,
+	plateDepth: 7,
 	plateXPadding: 3,
 	plateYPadding: 3,
 	centreAlign: false,
@@ -34,6 +35,8 @@ const elements = {
 	fontInput: getElById('font-input'),
 	textInput: getElById('text-input'),
 	exportButton: getElById('export-button'),
+	letterDepthInput: getElById('letter-depth'),
+	blockDepthInput: getElById('block-depth'),
 };
 
 class App {
@@ -48,6 +51,7 @@ class App {
 	groupRotation = new THREE.Euler(0.3, 0.3, 0.01);
 	fontPath = cfg.defaultFontPath;
 	fontProvider = new FontProvider(this);
+	renderController = new RenderController(this);
 	constructor(container) {
 		if (!container) container = document.body;
 		this.camera = new THREE.PerspectiveCamera(25, window.innerWidth / window.innerHeight, 0.1, 1000);
