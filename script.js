@@ -70,7 +70,7 @@ class App {
 			this.#_render();
 		}
 		const text = elements.textInput.value.trim();
-		const chars = text.split('');
+		const chars = text.replace(/\s+/g, '').split('');
 
 		const svgData = buildSVGData(text, this.font, elements.svg);
 
