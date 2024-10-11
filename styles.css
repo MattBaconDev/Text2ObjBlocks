@@ -49,3 +49,35 @@ canvas {
 	left: 0;
 	z-index: 2;
 }
+#render-controls {
+	color: #999;
+	position: absolute;
+	bottom: 3px;
+	right: 3px;
+	z-index: 2;
+	display: flex;
+	flex-direction: row;
+	align-items: center;
+	gap: 5px;
+}
+	.render-control {
+		display: flex;
+		flex-direction: row;
+		align-items: center;
+		position: relative;
+		gap: 5px;
+	}
+	.render-control label {
+		margin-left: 10px;
+	}
+	.render-control input {
+		position: relative;
+	}
+	#render-controls .render-control input:hover::before {
+		content: attr(value);
+		color: #FFF;
+		position: absolute;
+		top: -10px;
+		left: 50%;
+		transform: translateX(-50%);
+	}
