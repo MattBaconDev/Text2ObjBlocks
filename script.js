@@ -53,7 +53,7 @@ class App {
 	scene = new THREE.Scene();
 	svgGroup = new THREE.Group();
 	initialised = false;
-	groupRotation = new THREE.Euler(0.1, 0.1, 0);
+	groupRotation = new THREE.Euler(0, 0, 0);
 	fontPath = cfg.defaultFontPath;
 	fontProvider = new FontProvider(this);
 	renderController = new RenderController(this);
@@ -187,9 +187,14 @@ class App {
 			prevXBounds = xBounds;
 		});
 
+		groupBox.setFromObject(this.svgGroup);
+		groupBox.getCenter(groupCenter);
+		this.svgGroup.children.forEach(child => {
+			child.position.sub(groupCenter);
+		});
 		this.svgGroup.position.set(0,0,0);
 
-		const visWidth = visibleWidthAtZDepth(this.camera.position.z/3, this.camera);
+		const visWidth = visibleWidthAtZDepth(10, this.camera);
 		const groupSize = getObjSize(this.svgGroup);
 		if (groupSize.x > visWidth) {
 			this.svgGroup.scale.multiplyScalar(visWidth / groupSize.x);
@@ -259,8 +264,8 @@ elements.resetViewBtn.addEventListener('click', () => {
 	app.svgGroup.rotation.set(0,0,0);
 	if (!elements.textInput.value) {
 		elements.textInput.value = 'Text';
-		app.render();
 	}
+	app.render();
 });
 
 // helpers
