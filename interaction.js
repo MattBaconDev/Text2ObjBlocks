@@ -7,6 +7,7 @@ export default class Interaction {
 		this.mouse = new THREE.Vector2();
 		this.overGroup = null;
 		this.selectedGroup = null;
+		this.mouseDownGroup = null;
 	}
 	get selectedLetter() {
 		return this.selectedGroup?.name.split('_')[1];
@@ -24,6 +25,7 @@ export default class Interaction {
 	}
 	init() {
 		this.app.canvas.addEventListener('mousemove', this.onMouseMove.bind(this));
+		this.app.canvas.addEventListener('mousedown', this.onMouseDown.bind(this));
 		this.app.canvas.addEventListener('click', this.onClick.bind(this));
 		this.app.canvas.addEventListener('keydown', this.onKeyDown.bind(this));
 	}
@@ -34,10 +36,14 @@ export default class Interaction {
 			this.overGroup = group;
 		}
 	}
+	onMouseDown(ev) {
+		this.#_updateMouse(ev);
+		this.mouseDownGroup = this.overGroup;
+	}
 	onClick(ev) {
 		this.#_updateMouse(ev);
 		const group = this.#_groupUnderMouse();
-		if (group !== this.selectedGroup) {
+		if (group !== this.selectedGroup && group === this.mouseDownGroup) {
 			const prevSelection = this.selectedGroup;
 			this.selectedGroup = group;
 			if (prevSelection) {
