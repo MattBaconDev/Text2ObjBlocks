@@ -111,12 +111,9 @@ class App {
 
 		const sizes = [];
 
-		let lastCenterX = -1;
 		for (const letter of letters) {
 			const size = getObjSize(letter);
-			const center = getObjCenter(letter);
 			sizes.push(size);
-			lastCenterX = center.x;
 		}
 
 		const svgGroupBox = new THREE.Box3().setFromObject(this.svgGroup);
@@ -125,7 +122,6 @@ class App {
 		const svgGroupSize = new THREE.Vector3();
 		svgGroupBox.getSize(svgGroupSize);
 
-		const maxCenterY = Math.max(...letters.map(letter => getObjCenter(letter).y));
 		const groupHeight = svgGroupSize.y;
 
 		this.svgGroup.scale.y *= -1;
@@ -137,13 +133,10 @@ class App {
 			const i = letters.indexOf(letter);
 			const center = getObjCenter(letter);
 			const size = sizes[i];
-			const yMove = maxCenterY - center.y;
-			if (cfg.centreAlign) letter.position.y += yMove;
 			const plateGeo = new THREE.BoxGeometry(size.x + cfg.plateXPadding, groupHeight + cfg.plateYPadding, cfg.plateDepth);
 			const plateMesh = new THREE.Mesh(plateGeo, plateMat);
-			plateMesh.position.copy(center);
-			if (cfg.centreAlign) plateMesh.position.y += yMove;
-			else plateMesh.position.y = svgGroupCenter.y;
+			plateMesh.position.x = center.x;
+			plateMesh.position.y = svgGroupCenter.y;
 			plateMesh.position.z -= cfg.letterDepth * 0.75;
 
 			const letterGroup = new THREE.Group();
