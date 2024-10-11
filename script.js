@@ -12,7 +12,8 @@ await import('opentype');
 const cfg = {
 	defaultFontPath: './fonts/Gantry-Black.otf',
 	autoRotate: false,
-	fontSize: 22,
+	fontSize: 15,
+	letterSpacing: 1,
 	letterDepth: 5,
 	plateDepth: 7,
 	plateXPadding: 3,
@@ -51,7 +52,7 @@ class App {
 	scene = new THREE.Scene();
 	svgGroup = new THREE.Group();
 	initialised = false;
-	groupRotation = new THREE.Euler(0.3, 0.3, 0.01);
+	groupRotation = new THREE.Euler(0.1, 0.1, 0);
 	fontPath = cfg.defaultFontPath;
 	fontProvider = new FontProvider(this);
 	renderController = new RenderController(this);
@@ -166,9 +167,32 @@ class App {
 			child.position.sub(groupCenter);
 		});
 
-		this.svgGroup.position.add(groupCenter);
+		let prevXBounds = { left: 0, right: 0 };
+		let shifted = 0;
 
-		this.camera.lookAt(this.svgGroup.position);
+		this.svgGroup.children.forEach((child, i) => {
+			const centre = getObjCenter(child);
+			const l = centre.x - sizes[i].x/2;
+			const r = centre.x + sizes[i].x/2;
+			const lPos = new THREE.Vector3(l, centre.y, centre.z);
+			const rPos = new THREE.Vector3(r, centre.y, centre.z);
+			const xBounds = { left: lPos.x, right: rPos.x };
+			if (i > 0) {
+				const dist = xBounds.left - prevXBounds.right;
+				const shift = (-dist) + Math.max(3.5, ((cfg.fontSize/3) * cfg.letterSpacing));
+				child.translateX(shifted + shift);
+				shifted += shift;
+			}
+			prevXBounds = xBounds;
+		});
+
+		this.svgGroup.position.set(0,0,0);
+
+		const visWidth = visibleWidthAtZDepth(this.camera.position.z/3, this.camera);
+		const groupSize = getObjSize(this.svgGroup);
+		if (groupSize.x > visWidth) {
+			this.svgGroup.scale.multiplyScalar(visWidth / groupSize.x);
+		}
 
 		for (const group of this.svgGroup.children) {
 			group.children[0].userData.originalScale = group.children[0].scale.clone();
@@ -230,13 +254,11 @@ app.render();
 
 // helpers
 function buildSVGData(text, font, previewEl = null) {
-	const textSpaced = text.split('').join(' ');
-
-	const paths = font.getPaths(textSpaced, 0, 0, cfg.fontSize).filter(p => p.commands.length);
+	const paths = font.getPaths(text, 0, 0, cfg.fontSize).filter(p => p.commands.length);
 	const svgPaths = paths.map(p => p.toSVG()).join('');
 
 	if (previewEl) {
-		const path = font.getPath(textSpaced, 0, 0, cfg.fontSize);
+		const path = font.getPath(text, 0, 0, cfg.fontSize);
 		const bbox = path.getBoundingBox();
 		previewEl.setAttribute('viewBox', `${bbox.x1} ${bbox.y1} ${bbox.x2 - bbox.x1} ${bbox.y2 - bbox.y1}`);
 		previewEl.innerHTML = svgPaths;
@@ -266,3 +288,33 @@ function makeMaterial(colour = 0x666666, texture = '', bumpScale = 1) {
 function emptyObject(obj) {
 	obj.children.forEach(child => obj.remove(child));
 }
+function debugCoord(coords, colour, size = 6) {
+	const geom = new THREE.SphereGeometry(size);
+	const mesh = new THREE.Mesh(geom, new THREE.MeshStandardMaterial({ color: colour }));
+	mesh.position.copy(coords);
+	app.scene.add(mesh);
+	return mesh;
+}
+function debugBox(object, colour = 0xff0000) {
+	const box = new THREE.BoxHelper(object, colour);
+	app.scene.add(box);
+	return box;
+}
+// Taken from user 'looeee' (https://discourse.threejs.org/t/functions-to-calculate-the-visible-width-height-at-a-given-z-depth-from-a-perspective-camera/269)
+const visibleHeightAtZDepth = (depth, camera) => {
+	// compensate for cameras not positioned at z=0
+	const cameraOffset = camera.position.z;
+	if (depth < cameraOffset) depth -= cameraOffset;
+	else depth += cameraOffset;
+
+	// vertical fov in radians
+	const vFOV = camera.fov * Math.PI / 180;
+
+	// Math.abs to ensure the result is always positive
+	return 2 * Math.tan(vFOV / 2) * Math.abs(depth);
+};
+const visibleWidthAtZDepth = (depth, camera) => {
+	const height = visibleHeightAtZDepth(depth, camera);
+	return height * camera.aspect;
+};
+// End 'looeee' code
