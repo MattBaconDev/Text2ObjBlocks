@@ -10,6 +10,12 @@ const cfg = {
 	defaultFontPath: './fonts/Gantry-Black.otf',
 	autoRotate: false,
 	fontSize: 22,
+	letterSpacing: 1,
+	letterDepth: 5,
+	plateDepth: 8,
+	plateXMult: 1.2,
+	plateYMult: 1.2,
+	centreAlign: false,
 	sensitivity: {
 		pan: 1,
 		rotate: 1,
@@ -63,10 +69,11 @@ class App {
 			this.emptyScene();
 			this.#_render();
 		}
-		const text = elements.textInput.value;
+		const text = elements.textInput.value.trim();
+		const textSpaced = text.split('').join(' ');
 
 		// Create a path from the text
-		const path = this.font.getPath(text, 0, 0, cfg.fontSize);
+		const path = this.font.getPath(textSpaced, 0, 0, cfg.fontSize);
 		const bbox = path.getBoundingBox();
 		const svgPath = path.toSVG();
 
@@ -80,39 +87,92 @@ class App {
 		const plateMat = makeMaterial(0x666666, './textures/metal.jpg', 5);
 		const letterMat = makeMaterial(0x666666);
 
+		const chars = text.split('');
 		svgData.paths.forEach((path, i) => {
 			const shapes = SVGLoader.createShapes(path);
-
 			shapes.forEach((shape, j) => {
 				const geometry = new THREE.ExtrudeGeometry(shape, {
-					depth: 5,
+					depth: cfg.letterDepth,
 					bevelEnabled: false,
 				});
 				const mesh = new THREE.Mesh(geometry, letterMat);
+				const char = chars[j];
+				const multipleChars = chars.filter(c => c === char).length > 1;
+				if (!multipleChars) mesh.name = char;
+				else mesh.name = char + '-' + (chars.slice(0, j).filter(c => c === char).length + 1);
 				this.svgGroup.add(mesh);
 			});
 		});
 
-		const box = new THREE.Box3().setFromObject(this.svgGroup);
-		const size = new THREE.Vector3();
-		box.getSize(size);
+		const getObjSize = (obj) => {
+			const box = new THREE.Box3().setFromObject(obj);
+			const size = new THREE.Vector3();
+			box.getSize(size);
+			return size;
+		};
+		const getObjCenter = (obj) => {
+			const box = new THREE.Box3().setFromObject(obj);
+			const center = new THREE.Vector3();
+			box.getCenter(center);
+			return center;
+		};
 
-		const yOffset = size.y / -2;
-		const xOffset = size.x / -2;
+		const letters = Array.from(this.svgGroup.children);
 
-		const plateGeo = new THREE.BoxGeometry(size.x * 1.1, size.y * 1.3, 8);
-		const mesh = new THREE.Mesh(plateGeo, plateMat);
-		mesh.position.set(0, -(size.y / 1.1), -3);
-		this.svgGroup.children.forEach(item => {
-			item.position.x = xOffset;
-			item.position.y = yOffset;
-		});
-		this.svgGroup.add(mesh);
+		const sizes = [];
+		const spacings = [];
+		const centers = [];
+
+		let lastCenterX = -1;
+		for (const letter of letters) {
+			const size = getObjSize(letter);
+			const center = getObjCenter(letter);
+			sizes.push(size);
+			spacings.push(lastCenterX === -1 ? 0 : center.x - lastCenterX);
+			centers.push(center.x);
+			lastCenterX = center.x;
+		}
+
+		const maxY = Math.max(...sizes.map(size => size.y));
+		const maxX = Math.max(...sizes.map(size => size.x));
+
+		const maxCenterY = Math.max(...letters.map(letter => getObjCenter(letter).y));
 
 		this.svgGroup.scale.y *= -1;
 		this.svgGroup.position.y = -10;
 		this.svgGroup.rotation.copy(this.groupRotation);
 		this.scene.add(this.svgGroup);
+
+		for (const letter of letters) {
+			const i = letters.indexOf(letter);
+			const center = getObjCenter(letter);
+			const size = sizes[i];
+			const yMove = maxCenterY - center.y;
+			if (cfg.centreAlign) letter.position.y += yMove;
+			const plateGeo = new THREE.BoxGeometry(size.x * cfg.plateXMult, maxY * cfg.plateYMult, cfg.plateDepth);
+			const plateMesh = new THREE.Mesh(plateGeo, plateMat);
+			plateMesh.position.copy(center);
+			if (cfg.centreAlign) plateMesh.position.y += yMove;
+			plateMesh.position.z -= cfg.letterDepth * 0.75;
+
+			const letterGroup = new THREE.Group();
+			letterGroup.add(letter);
+			letterGroup.add(plateMesh);
+			this.svgGroup.add(letterGroup);
+		}
+
+		// Center svgGroup children to the group
+		const groupBox = new THREE.Box3().setFromObject(this.svgGroup);
+		const groupCenter = new THREE.Vector3();
+		groupBox.getCenter(groupCenter);
+
+		this.svgGroup.children.forEach(child => {
+			child.position.sub(groupCenter);
+		});
+
+		this.svgGroup.position.add(groupCenter);
+
+		this.camera.lookAt(this.svgGroup.position);
 
 		const light = new THREE.AmbientLight(0xffffff, 0.5, 1);
 		light.position.set(-50, 36, 15);
