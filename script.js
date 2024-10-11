@@ -145,7 +145,6 @@ class App {
 			const size = sizes[i];
 			const plateGeo = new THREE.BoxGeometry(size.x + cfg.plateXPadding, groupHeight + cfg.plateYPadding, cfg.plateDepth);
 			const plateMesh = new THREE.Mesh(plateGeo, this.plateMat.clone());
-			plateMesh.name = `plate-${i}`;
 			const meshSize = getObjSize(plateMesh);
 			plateMesh.position.x = center.x;
 			plateMesh.position.y = svgGroupCenter.y;
