@@ -41,6 +41,7 @@ const elements = {
 	exportButton: getElById('export-button'),
 	letterDepthInput: getElById('letter-depth'),
 	blockDepthInput: getElById('block-depth'),
+	resetViewBtn: getElById('reset-view-btn'),
 };
 
 class App {
@@ -251,6 +252,16 @@ enableExportScene(elements.exportButton, app);
 initMouse3DMover(app, elements.canvas);
 
 app.render();
+
+elements.resetViewBtn.addEventListener('click', () => {
+	app.svgGroup.position.set(0,0,0);
+	app.svgGroup.scale.set(1,-1,1);
+	app.svgGroup.rotation.set(0,0,0);
+	if (!elements.textInput.value) {
+		elements.textInput.value = 'Text';
+		app.render();
+	}
+});
 
 // helpers
 function buildSVGData(text, font, previewEl = null) {
