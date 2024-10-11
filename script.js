@@ -135,9 +135,10 @@ class App {
 			const size = sizes[i];
 			const plateGeo = new THREE.BoxGeometry(size.x + cfg.plateXPadding, groupHeight + cfg.plateYPadding, cfg.plateDepth);
 			const plateMesh = new THREE.Mesh(plateGeo, plateMat);
+			const meshSize = getObjSize(plateMesh);
 			plateMesh.position.x = center.x;
 			plateMesh.position.y = svgGroupCenter.y;
-			plateMesh.position.z -= cfg.letterDepth * 0.75;
+			plateMesh.position.z = (-meshSize.z/2) + 0.1;
 
 			const letterGroup = new THREE.Group();
 			letterGroup.add(letter);
