@@ -244,6 +244,18 @@ class App {
 			group.children[1].userData.originalPosition = group.children[1].position.clone();
 		}
 
+		const planeSize = 50;
+		const quads = [[], []];
+		for (let x = 0; x <= 1; x++) {
+			for (let y = 0; y <= 1; y++) {
+				const geometry = new THREE.PlaneGeometry(planeSize, planeSize);
+				const material = new THREE.MeshBasicMaterial({ color: 0x66CCFF, side: THREE.DoubleSide, wireframe: true });
+				const plane = new THREE.Mesh(geometry, material);
+				plane.position.set(Math.sign(x - 0.5) * planeSize / 2, Math.sign(y - 0.5) * planeSize / 2, 0);
+				this.scene.add(plane);
+				quads[x][y] = plane;
+			}
+		}
 		const light = new THREE.AmbientLight(0xffffff, 0.5, 1);
 		light.position.set(-50, 36, 15);
 		this.scene.add(light);
