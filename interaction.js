@@ -98,6 +98,12 @@ export default class Interaction {
 		if (ev.key === 'ArrowDown') {
 			this.selectedLetterMesh.position.y += 0.1;
 		}
+		if (ev.key === 'ArrowLeft') {
+			this.selectedLetterMesh.position.x += 0.1;
+		}
+		if (ev.key === 'ArrowRight') {
+			this.selectedLetterMesh.position.x -= 0.1;
+		}
 	}
 	resetChanges(mesh = null) {
 		if (!mesh) {
