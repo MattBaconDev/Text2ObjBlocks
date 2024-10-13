@@ -31,7 +31,6 @@ const cfg = {
 		zoom: 1
 	}
 };
-cfg.letterDepth += cfg.plateOverlap;
 
 function getElById(id) {
 	return document.getElementById(id);
@@ -102,7 +101,7 @@ class App {
 			const letterGeos = [];
 			shapes.forEach((shape, j) => {
 				const geometry = new THREE.ExtrudeGeometry(shape, {
-					depth: cfg.letterDepth,
+					depth: cfg.letterDepth + cfg.plateOverlap,
 					bevelEnabled: false,
 				});
 				letterGeos.push(geometry);
