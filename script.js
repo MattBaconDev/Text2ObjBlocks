@@ -13,7 +13,7 @@ await import('opentype');
 const cfg = {
 	defaultFontPath: './fonts/Roboto-Regular.ttf',
 	autoRotate: false,
-	mirrored: true,
+	mirror: true,
 	fontSize: 15,
 	plateOverlap: 0.1,
 	letterSpacing: 1,
@@ -50,6 +50,7 @@ const elements = {
 	linoModeInput: getElById('lino-mode'),
 	fontSizeInput: getElById('font-size'),
 	fullDepth: getElById('full-depth'),
+	mirrorModeInput: getElById('mirror-mode'),
 };
 
 class App {
@@ -168,7 +169,7 @@ class App {
 			letterGroup.name = 'lino_' + text;
 			letterGroup.add(...letters);
 			letterGroup.add(subbedPlateMesh);
-			if (cfg.mirrored) letterGroup.scale.multiply(new THREE.Vector3(-1, 1, 1));
+			if (cfg.mirror) letterGroup.scale.multiply(new THREE.Vector3(-1, 1, 1));
 			this.svgGroup.add(letterGroup);
 			this.interaction.applySelection(letterGroup);
 		}
@@ -192,7 +193,8 @@ class App {
 				letterGroup.name = 'letter_' + letter.name;
 				letterGroup.add(letter);
 				letterGroup.add(subbedPlateMesh);
-				if (cfg.mirrored) letterGroup.scale.multiply(new THREE.Vector3(-1, 1, 1));
+				letterGroup.position.set(0, 0, 0);
+				if (cfg.mirror) letterGroup.scale.multiply(new THREE.Vector3(-1, 1, 1));
 				this.svgGroup.add(letterGroup);
 				this.interaction.applySelection(letterGroup);
 			}
