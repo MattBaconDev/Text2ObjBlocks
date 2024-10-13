@@ -1,9 +1,9 @@
 import * as THREE from 'three';
 import { SVGLoader } from 'three/addons/loaders/SVGLoader.js';
+import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import * as BufferGeometryUtils from 'three/addons/utils/BufferGeometryUtils.js';
 import FontProvider from './fonts.js';
 import { enableExportScene } from './export.js';
-import { initMouse3DMover } from './mouse3dmover.js';
 import RenderController from './RenderController.js';
 import Interaction from './interaction.js';
 import { CSG } from './libs/CSGMesh.js';
@@ -80,6 +80,8 @@ class App {
 		this.camera.position.z = 150;
 		this.text = '';
 		if (cfg.orthCamera) this.camera.scale.multiplyScalar(0.2);
+		this.orbitControls = new OrbitControls(this.camera, this.renderer.domElement);
+		this.orbitControls.target = new THREE.Vector3(0, 0, 0);
 	}
 	emptyScene() {
 		emptyObject(this.svgGroup);
@@ -288,8 +290,6 @@ elements.textInput.addEventListener('input', () => {
 });
 
 enableExportScene(elements.exportButton, app);
-
-initMouse3DMover(app, elements.canvas);
 
 app.render();
 
