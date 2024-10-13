@@ -1,10 +1,21 @@
 import { STLExporter } from 'three/addons/exporters/STLExporter.js';
 
 export function enableExportScene(button, app) {
-	button.addEventListener('click', () => {
+	button.addEventListener('click', async () => {
 		const exporter = new STLExporter();
-		const data = exporter.parse(app.scene);
-		downloadFile(data);
+		const oldRot = app.scene.rotation.clone();
+		const oldPos = app.scene.position.clone();
+		app.scene.rotation.set(0, 0, 0);
+		app.scene.position.set(0, 0, 0);
+		await app.render();
+		setTimeout(() => {
+			const data = exporter.parse(app.scene);
+			downloadFile(data);
+			setTimeout(() => {
+				app.scene.rotation.set(oldRot.x, oldRot.y, oldRot.z);
+				app.scene.position.set(oldPos.x, oldPos.y, oldPos.z);
+			}, 50);
+		}, 50);
 	});
 }
 
