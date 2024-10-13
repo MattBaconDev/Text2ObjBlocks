@@ -24,7 +24,7 @@ function downloadFile(data, name) {
 	const url = URL.createObjectURL(blob);
 	const link = document.createElement('a');
 	link.href = url;
-	link.download = name || 'scene.stl';
+	link.download = name ? name + '.stl' : 'scene.stl';
 	link.click();
 	URL.revokeObjectURL(url);
 }
