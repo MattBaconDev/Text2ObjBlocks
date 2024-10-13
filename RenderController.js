@@ -4,7 +4,7 @@ export default class RenderController {
 		this.app.elements.letterDepthInput.setAttribute('value', app.cfg.letterDepth);
 		this.app.elements.blockDepthInput.setAttribute('value', app.cfg.plateDepth);
 		this.app.elements.fontSizeInput.setAttribute('value', app.cfg.fontSize);
-		this.app.elements.linoModeInput.setAttribute('checked', app.cfg.linoMode);
+		this.app.elements.linoModeInput.checked = app.cfg.linoMode;
 		this.app.elements.fullDepth.textContent = this.app.cfg.letterDepth + this.app.cfg.plateDepth;
 		this.app.elements.letterDepthInput.addEventListener('input', this.handleDepthChange.bind(this));
 		this.app.elements.blockDepthInput.addEventListener('input', this.handleDepthChange.bind(this));
