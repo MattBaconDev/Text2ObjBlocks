@@ -169,11 +169,14 @@ class App {
 			plateMesh.position.x = svgGroupCenter.x + (normPadding / 2) - normPadLeft;
 			plateMesh.position.y = svgGroupCenter.y;
 			plateMesh.position.z = (-meshSize.z / 2) + cfg.plateOverlap;
+			plateMesh.updateMatrix();
+
+			const subbedPlateMesh = nickMesh(plateMesh, meshSize);
 
 			const letterGroup = new THREE.Group();
 			letterGroup.name = 'lino_' + text;
 			letterGroup.add(...letters);
-			letterGroup.add(plateMesh);
+			letterGroup.add(subbedPlateMesh);
 			if (cfg.mirrored) letterGroup.scale.multiply(new THREE.Vector3(-1, 1, 1));
 			this.svgGroup.add(letterGroup);
 			this.interaction.applySelection(letterGroup);
@@ -192,25 +195,12 @@ class App {
 				plateMesh.position.z = (-meshSize.z / 2) + cfg.plateOverlap;
 				plateMesh.updateMatrix();
 
-				const rad = meshSize.y / 7;
-				const cylinder = new THREE.CylinderGeometry(rad, rad, meshSize.x * 1.1, 12);
-				const cylinderMesh = new THREE.Mesh(cylinder, this.plateMat.clone());
-				cylinderMesh.position.copy(plateMesh.position);
-				cylinderMesh.position.y += meshSize.y / 2;
-				cylinderMesh.rotation.z = degreesToEuler(90);
-				cylinderMesh.updateMatrix();
-
-				const plateCSG = CSG.fromMesh(plateMesh, 0);
-				const cylCSG = CSG.fromMesh(cylinderMesh, 1);
-				const subbed = plateCSG.subtract(cylCSG);
-				const subMesh = CSG.toMesh(subbed, plateMesh.matrix);
-				subMesh.position.copy(plateMesh.position);
-				subMesh.material = this.plateMat.clone();
+				const subbedPlateMesh = nickMesh(plateMesh, meshSize);
 
 				const letterGroup = new THREE.Group();
 				letterGroup.name = 'letter_' + letter.name;
 				letterGroup.add(letter);
-				letterGroup.add(subMesh);
+				letterGroup.add(subbedPlateMesh);
 				if (cfg.mirrored) letterGroup.scale.multiply(new THREE.Vector3(-1, 1, 1));
 				this.svgGroup.add(letterGroup);
 				this.interaction.applySelection(letterGroup);
@@ -385,6 +375,24 @@ function debugBox(object, colour = 0xff0000) {
 	const box = new THREE.BoxHelper(object, colour);
 	app.scene.add(box);
 	return box;
+}
+function nickMesh(mesh, meshSize, mat) {
+	if (!mat) mat = mesh.material.clone();
+	const rad = meshSize.y / 7;
+	const cylinder = new THREE.CylinderGeometry(rad, rad, meshSize.x * 1.1, 12);
+	const cylinderMesh = new THREE.Mesh(cylinder, mat);
+	cylinderMesh.position.copy(mesh.position);
+	cylinderMesh.position.y += meshSize.y / 2;
+	cylinderMesh.rotation.z = degreesToEuler(90);
+	cylinderMesh.updateMatrix();
+
+	const meshCSG = CSG.fromMesh(mesh, 0);
+	const cylCSG = CSG.fromMesh(cylinderMesh, 1);
+	const subbed = meshCSG.subtract(cylCSG);
+	const subMesh = CSG.toMesh(subbed, mesh.matrix);
+	subMesh.position.copy(mesh.position);
+	subMesh.material = mat;
+	return subMesh;
 }
 // Taken from user 'looeee' (https://discourse.threejs.org/t/functions-to-calculate-the-visible-width-height-at-a-given-z-depth-from-a-perspective-camera/269)
 const visibleHeightAtZDepth = (depth, camera) => {
