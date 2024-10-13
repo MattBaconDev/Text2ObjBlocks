@@ -28,7 +28,7 @@ const cfg = {
 	defaultColour: 0x666666,
 	selectedColour: 0x00ff00,
 	orthCamera: false,
-	targetRatio: 0.5,
+	targetRatio: 0.75,
 	sensitivity: {
 		pan: 1,
 		rotate: 1,
@@ -84,7 +84,7 @@ class App {
 		this.renderer.setSize(window.innerWidth, window.innerHeight);
 		document.body.appendChild(this.renderer.domElement);
 		this.camera.position.z = 150;
-		this.camera.position.y = -275;
+		this.camera.position.y = -250;
 		this.text = '';
 		if (cfg.orthCamera) this.camera.scale.multiplyScalar(0.2);
 		this.scene.background = new THREE.Color(0x053555);
@@ -285,7 +285,7 @@ class App {
 	zoomToFit() {
 		const groupSize = getObjSize(this.svgGroup);
 		const center = getObjCenter(this.svgGroup);
-		const sphere = new THREE.Sphere(center, Math.max(50, groupSize.x * 0.75 * cfg.targetRatio));
+		const sphere = new THREE.Sphere(center, Math.max(50, groupSize.x * 0.75 * (1 - cfg.targetRatio)));
 		this.cameraControls.fitToSphere(sphere, true);
 	}
 	resetView() {
