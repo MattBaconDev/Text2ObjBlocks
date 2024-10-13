@@ -1,12 +1,15 @@
 import * as THREE from 'three';
 import { SVGLoader } from 'three/addons/loaders/SVGLoader.js';
-import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import * as BufferGeometryUtils from 'three/addons/utils/BufferGeometryUtils.js';
 import FontProvider from './fonts.js';
 import { enableExportScene } from './export.js';
 import RenderController from './RenderController.js';
 import Interaction from './interaction.js';
 import { CSG } from './libs/CSGMesh.js';
+import CameraControls from './libs/camera-controls.module.js';
+
+CameraControls.install({ THREE });
+const clock = new THREE.Clock();
 
 await import('opentype');
 
@@ -25,6 +28,7 @@ const cfg = {
 	defaultColour: 0x666666,
 	selectedColour: 0x00ff00,
 	orthCamera: false,
+	targetRatio: 0.5,
 	sensitivity: {
 		pan: 1,
 		rotate: 1,
@@ -46,6 +50,7 @@ const elements = {
 	letterDepthInput: getElById('letter-depth'),
 	blockDepthInput: getElById('block-depth'),
 	resetViewBtn: getElById('reset-view-btn'),
+	zoomFitBtn: getElById('zoom-fit-btn'),
 	linoModeInput: getElById('lino-mode'),
 	fontSizeInput: getElById('font-size'),
 	fullDepth: getElById('full-depth'),
@@ -69,9 +74,10 @@ class App {
 	interaction = new Interaction(this);
 	plateMat = makeMaterial(cfg.defaultColour, './textures/metal.jpg', 5);
 	letterMat = makeMaterial(cfg.defaultColour);
+	savedOrbitState = false;
 	constructor(container) {
 		if (!container) container = document.body;
-		this.camera = new THREE.PerspectiveCamera(25, window.innerWidth / window.innerHeight, 0.1, 1000);
+		this.camera = new THREE.PerspectiveCamera(25, window.innerWidth / window.innerHeight, 0.1, 5000);
 		if (cfg.orthCamera) this.camera = new THREE.OrthographicCamera(-100, 100, 100, -100, 0.1, 1000);
 		this.canvas = elements.canvas;
 		this.renderer = new THREE.WebGLRenderer({ canvas: this.canvas, antialias: true });
@@ -81,9 +87,8 @@ class App {
 		this.camera.position.y = -275;
 		this.text = '';
 		if (cfg.orthCamera) this.camera.scale.multiplyScalar(0.2);
-		this.orbitControls = new OrbitControls(this.camera, this.renderer.domElement);
-		this.orbitControls.target = new THREE.Vector3(0, 0, 0);
 		this.scene.background = new THREE.Color(0x053555);
+		this.cameraControls = new CameraControls(this.camera, this.renderer.domElement);
 	}
 	emptyScene() {
 		emptyObject(this.svgGroup);
@@ -218,12 +223,6 @@ class App {
 			prevXBounds = xBounds;
 		});
 
-		const visWidth = visibleWidthAtZDepth(0, this.camera);
-		const groupSize = getObjSize(this.svgGroup);
-		if (groupSize.x > visWidth) {
-			this.camera.position.divideScalar(visWidth / groupSize.x);
-		}
-
 		for (const group of this.svgGroup.children) {
 			group.children[0].userData.originalScale = group.children[0].scale.clone();
 			group.children[0].userData.originalPosition = group.children[0].position.clone();
@@ -255,7 +254,6 @@ class App {
 		this.scene.add(directionalLight);
 
 		this.#_render();
-		this.orbitControls.saveState();
 		this.initialise();
 	}
 	#_render() {
@@ -265,6 +263,8 @@ class App {
 		if (this.initialised) return;
 
 		const animate = () => {
+			const delta = clock.getDelta();
+			this.cameraControls.update(delta);
 			requestAnimationFrame(animate);
 			this.#_render();
 		};
@@ -278,9 +278,18 @@ class App {
 
 		this.interaction.init();
 		this.initialised = true;
+		this.#_render();
+		this.zoomToFit();
+		this.cameraControls.saveState();
+	}
+	zoomToFit() {
+		const groupSize = getObjSize(this.svgGroup);
+		const center = getObjCenter(this.svgGroup);
+		const sphere = new THREE.Sphere(center, Math.max(50, groupSize.x * 0.75 * cfg.targetRatio));
+		this.cameraControls.fitToSphere(sphere, true);
 	}
 	resetView() {
-		this.orbitControls.reset();
+		this.cameraControls.reset(true);
 	}
 }
 
@@ -294,8 +303,9 @@ enableExportScene(elements.exportButton, app);
 
 app.render();
 
-elements.resetViewBtn.addEventListener('click', () => app.resetView());
 
+elements.resetViewBtn.addEventListener('click', () => app.resetView());
+elements.zoomFitBtn.addEventListener('click', () => app.zoomToFit());
 // helpers
 function buildSVGData(text, font, previewEl = null) {
 	const paths = font.getPaths(text, 0, 0, cfg.fontSize).filter(p => p.commands.length);
