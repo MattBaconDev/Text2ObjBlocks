@@ -83,6 +83,7 @@ class App {
 		if (cfg.orthCamera) this.camera.scale.multiplyScalar(0.2);
 		this.orbitControls = new OrbitControls(this.camera, this.renderer.domElement);
 		this.orbitControls.target = new THREE.Vector3(0, 0, 0);
+		this.scene.background = new THREE.Color(0x053555);
 	}
 	emptyScene() {
 		emptyObject(this.svgGroup);
