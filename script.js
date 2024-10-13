@@ -375,6 +375,7 @@ function makeMaterial(colour = 0x666666, texture = '', bumpScale = 1) {
 function emptyObject(obj) {
 	while(obj.children.length > 0) obj.remove(obj.children[0]);
 }
+const debugColours = [0x0000ff, 0x00ff00, 0xff0000, 0xffff00, 0xff00ff, 0x00ffff, 0xffffff];
 function debugCoord(coords, colour, size = 6) {
 	const geom = new THREE.SphereGeometry(size);
 	const mesh = new THREE.Mesh(geom, new THREE.MeshStandardMaterial({ color: colour }));
@@ -404,6 +405,13 @@ function nickMesh(mesh, meshSize, mat) {
 	subMesh.position.copy(mesh.position);
 	subMesh.material = mat;
 	return subMesh;
+}
+function edgeMesh(mesh, color = 0xffff00) {
+	const geometry = new THREE.EdgesGeometry(mesh.geometry);
+	const material = new THREE.LineBasicMaterial({ color, linewidth: 1 });
+	const edges = new THREE.LineSegments(geometry, material);
+	mesh.add(edges);
+	return edges;
 }
 // Taken from user 'looeee' (https://discourse.threejs.org/t/functions-to-calculate-the-visible-width-height-at-a-given-z-depth-from-a-perspective-camera/269)
 const visibleHeightAtZDepth = (depth, camera) => {
