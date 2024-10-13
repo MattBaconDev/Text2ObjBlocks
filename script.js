@@ -166,9 +166,9 @@ class App {
 			const plateGeo = new THREE.BoxGeometry(svgGroupSize.x + normPadding, groupHeight + cfg.plateYPadding, cfg.plateDepth);
 			const plateMesh = new THREE.Mesh(plateGeo, this.plateMat.clone());
 			const meshSize = getObjSize(plateMesh);
-			plateMesh.position.x = svgGroupCenter.x + (normPadding/2) - normPadLeft;
+			plateMesh.position.x = svgGroupCenter.x + (normPadding / 2) - normPadLeft;
 			plateMesh.position.y = svgGroupCenter.y;
-			plateMesh.position.z = (-meshSize.z/2) + cfg.plateOverlap;
+			plateMesh.position.z = (-meshSize.z / 2) + cfg.plateOverlap;
 
 			const letterGroup = new THREE.Group();
 			letterGroup.name = 'lino_' + text;
@@ -187,9 +187,9 @@ class App {
 				const plateGeo = new THREE.BoxGeometry(size.x + normPadding, groupHeight + cfg.plateYPadding, cfg.plateDepth);
 				const plateMesh = new THREE.Mesh(plateGeo, this.plateMat.clone());
 				const meshSize = getObjSize(plateMesh);
-				plateMesh.position.x = center.x + (normPadding/2) - normPadLeft;
+				plateMesh.position.x = center.x + (normPadding / 2) - normPadLeft;
 				plateMesh.position.y = svgGroupCenter.y;
-				plateMesh.position.z = (-meshSize.z/2) + cfg.plateOverlap;
+				plateMesh.position.z = (-meshSize.z / 2) + cfg.plateOverlap;
 				plateMesh.updateMatrix();
 
 				const rad = meshSize.y / 7;
@@ -231,14 +231,14 @@ class App {
 
 		this.svgGroup.children.forEach((child, i) => {
 			const centre = getObjCenter(child);
-			const l = centre.x - sizes[i].x/2;
-			const r = centre.x + sizes[i].x/2;
+			const l = centre.x - sizes[i].x / 2;
+			const r = centre.x + sizes[i].x / 2;
 			const lPos = new THREE.Vector3(l, centre.y, centre.z);
 			const rPos = new THREE.Vector3(r, centre.y, centre.z);
 			const xBounds = { left: lPos.x, right: rPos.x };
 			if (i > 0) {
 				const dist = xBounds.left - prevXBounds.right;
-				const shift = (-dist) + Math.max(2.5, ((cfg.fontSize/4) * cfg.letterSpacing));
+				const shift = (-dist) + Math.max(2.5, ((cfg.fontSize / 4) * cfg.letterSpacing));
 				child.translateX(shifted + shift);
 				shifted += shift;
 			}
@@ -250,7 +250,7 @@ class App {
 		this.svgGroup.children.forEach(child => {
 			child.position.sub(groupCenter);
 		});
-		this.svgGroup.position.set(0,0,0);
+		this.svgGroup.position.set(0, 0, 0);
 
 		const visWidth = visibleWidthAtZDepth(10, this.camera);
 		const groupSize = getObjSize(this.svgGroup);
@@ -317,9 +317,9 @@ initMouse3DMover(app, elements.canvas);
 app.render();
 
 elements.resetViewBtn.addEventListener('click', () => {
-	app.svgGroup.position.set(0,0,0);
-	app.svgGroup.scale.set(1,-1,1);
-	app.svgGroup.rotation.set(0,0,0);
+	app.svgGroup.position.set(0, 0, 0);
+	app.svgGroup.scale.set(1, -1, 1);
+	app.svgGroup.rotation.set(0, 0, 0);
 	if (!elements.textInput.value) {
 		elements.textInput.value = 'Text';
 	}
