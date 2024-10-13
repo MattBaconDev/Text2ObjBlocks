@@ -56,6 +56,7 @@ class App {
 	get font() {
 		return this.fontProvider.font;
 	}
+	text = '';
 	scene = new THREE.Scene();
 	svgGroup = new THREE.Group();
 	initialised = false;
@@ -75,11 +76,15 @@ class App {
 		this.renderer.setSize(window.innerWidth, window.innerHeight);
 		document.body.appendChild(this.renderer.domElement);
 		this.camera.position.z = 150;
+		this.text = '';
 		if (cfg.orthCamera) this.camera.scale.multiplyScalar(0.2);
 	}
 	emptyScene() {
 		emptyObject(this.svgGroup);
 		emptyObject(this.scene);
+	}
+	getSceneName() {
+		return this.font.names.fullName.en + '_' + this.text.replace(/[^A-Za-z0-9]/g, '').substring(0, 5);
 	}
 	async render() {
 		await this.fontProvider.load(this.fontPath);
@@ -90,6 +95,7 @@ class App {
 			this.#_render();
 		}
 		const text = elements.textInput.value.trim();
+		this.text = text;
 		const chars = text.replace(/\s+/g, '').split('');
 
 		const svgData = buildSVGData(text, this.font, elements.svg);

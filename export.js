@@ -10,7 +10,7 @@ export function enableExportScene(button, app) {
 		await app.render();
 		setTimeout(() => {
 			const data = exporter.parse(app.scene);
-			downloadFile(data);
+			downloadFile(data, app.getSceneName());
 			setTimeout(() => {
 				app.scene.rotation.set(oldRot.x, oldRot.y, oldRot.z);
 				app.scene.position.set(oldPos.x, oldPos.y, oldPos.z);
@@ -19,12 +19,12 @@ export function enableExportScene(button, app) {
 	});
 }
 
-function downloadFile(data) {
+function downloadFile(data, name) {
 	const blob = new Blob([data], { type: 'text/plain' });
 	const url = URL.createObjectURL(blob);
 	const link = document.createElement('a');
 	link.href = url;
-	link.download = 'scene.stl';
+	link.download = name || 'scene.stl';
 	link.click();
 	URL.revokeObjectURL(url);
 }
