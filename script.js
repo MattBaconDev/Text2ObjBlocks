@@ -254,6 +254,7 @@ class App {
 		this.scene.add(directionalLight);
 
 		this.#_render();
+		this.orbitControls.saveState();
 		this.initialise();
 	}
 	#_render() {
@@ -281,6 +282,9 @@ class App {
 		this.interaction.init();
 		this.initialised = true;
 	}
+	resetView() {
+		this.orbitControls.reset();
+	}
 }
 
 const app = new App();
@@ -293,15 +297,7 @@ enableExportScene(elements.exportButton, app);
 
 app.render();
 
-elements.resetViewBtn.addEventListener('click', () => {
-	app.svgGroup.position.set(0, 0, 0);
-	app.svgGroup.scale.set(1, -1, 1);
-	app.svgGroup.rotation.set(0, 0, 0);
-	if (!elements.textInput.value) {
-		elements.textInput.value = 'Text';
-	}
-	app.render();
-});
+elements.resetViewBtn.addEventListener('click', () => app.resetView());
 
 // helpers
 function buildSVGData(text, font, previewEl = null) {
