@@ -12,6 +12,7 @@ await import('opentype');
 const cfg = {
 	defaultFontPath: './fonts/Gantry-Black.otf',
 	autoRotate: false,
+	mirrored: true,
 	fontSize: 15,
 	letterSpacing: 1,
 	letterDepth: 5,
@@ -154,6 +155,7 @@ class App {
 			letterGroup.name = 'letter_' + letter.name;
 			letterGroup.add(letter);
 			letterGroup.add(plateMesh);
+			if (cfg.mirrored) letterGroup.scale.multiply(new THREE.Vector3(-1, 1, 1));
 			this.svgGroup.add(letterGroup);
 			this.interaction.applySelection(letterGroup);
 		}
