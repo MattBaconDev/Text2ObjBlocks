@@ -1,9 +1,9 @@
 export default class RenderController {
     constructor(app) {
         this.app = app;
-		this.app.elements.letterDepthInput.value = app.cfg.letterDepth;
-		this.app.elements.blockDepthInput.value = app.cfg.plateDepth;
-		this.app.elements.linoModeInput.checked = app.cfg.linoMode;
+		this.app.elements.letterDepthInput.setAttribute('value', app.cfg.letterDepth);
+		this.app.elements.blockDepthInput.setAttribute('value', app.cfg.plateDepth);
+		this.app.elements.linoModeInput.setAttribute('checked', app.cfg.linoMode);
 		this.app.elements.letterDepthInput.addEventListener('input', this.handleDepthChange.bind(this));
 		this.app.elements.blockDepthInput.addEventListener('input', this.handleDepthChange.bind(this));
 		this.app.elements.linoModeInput.addEventListener('change', this.handleLinoModeChange.bind(this));
