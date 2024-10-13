@@ -10,7 +10,7 @@ import Interaction from './interaction.js';
 await import('opentype');
 
 const cfg = {
-	defaultFontPath: './fonts/Gantry-Black.otf',
+	defaultFontPath: './fonts/Roboto-Regular.ttf',
 	autoRotate: false,
 	mirrored: true,
 	fontSize: 15,
