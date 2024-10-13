@@ -26,6 +26,12 @@ export default class FontProvider {
 				if (err) return reject(err);
 				this.#_fontCache[fontPath] = font;
 				this.font = font;
+				Object.values(font.glyphs.glyphs).forEach(glyph => {
+					if (glyph.unicode >= 33 && glyph.unicode <= 126) {
+						const metrics = glyph.getMetrics();
+						glyph.rightSideBearing = metrics.rightSideBearing;
+					}
+				});
 				resolve(this.font);
 			});
 		});

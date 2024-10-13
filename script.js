@@ -15,10 +15,10 @@ const cfg = {
 	mirrored: true,
 	fontSize: 15,
 	letterSpacing: 1,
-	letterDepth: 5,
-	plateDepth: 7,
-	plateXPadding: 3,
-	plateYPadding: 3,
+	letterDepth: 2,
+	plateDepth: 21.318,
+	plateXPadding: 0,
+	plateYPadding: 0,
 	centreAlign: false,
 	defaultColour: 0x666666,
 	selectedColour: 0x00ff00,
@@ -144,10 +144,16 @@ class App {
 			const i = letters.indexOf(letter);
 			const center = getObjCenter(letter);
 			const size = sizes[i];
-			const plateGeo = new THREE.BoxGeometry(size.x + cfg.plateXPadding, groupHeight + cfg.plateYPadding, cfg.plateDepth);
+			const unicode = letter.name.charCodeAt(0);
+			const glyph = Object.values(this.font.glyphs.glyphs).find(g => g.unicode === unicode);
+			if (!glyph.rightSideBearing) glyph.rightSideBearing = glyph.getMetrics().rightSideBearing;
+			const normPadLeft = (glyph.leftSideBearing / glyph.advanceWidth) * size.x;
+			const normPadRight = (glyph.rightSideBearing / glyph.advanceWidth) * size.x;
+			const normPadding = normPadLeft + normPadRight;
+			const plateGeo = new THREE.BoxGeometry(size.x + normPadding, groupHeight + cfg.plateYPadding, cfg.plateDepth);
 			const plateMesh = new THREE.Mesh(plateGeo, this.plateMat.clone());
 			const meshSize = getObjSize(plateMesh);
-			plateMesh.position.x = center.x;
+			plateMesh.position.x = center.x + (normPadding/2) - normPadLeft;
 			plateMesh.position.y = svgGroupCenter.y;
 			plateMesh.position.z = (-meshSize.z/2) + 0.1;
 
