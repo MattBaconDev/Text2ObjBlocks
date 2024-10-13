@@ -12,7 +12,6 @@ await import('opentype');
 
 const cfg = {
 	defaultFontPath: './fonts/Roboto-Regular.ttf',
-	autoRotate: false,
 	mirror: true,
 	fontSize: 15,
 	plateOverlap: 0.1,
@@ -200,15 +199,6 @@ class App {
 			}
 		}
 
-		// Center svgGroup children to the group
-		const groupBox = new THREE.Box3().setFromObject(this.svgGroup);
-		const groupCenter = new THREE.Vector3();
-		groupBox.getCenter(groupCenter);
-
-		this.svgGroup.children.forEach(child => {
-			child.position.sub(groupCenter);
-		});
-
 		let prevXBounds = { left: 0, right: 0 };
 		let shifted = 0;
 
@@ -228,17 +218,10 @@ class App {
 			prevXBounds = xBounds;
 		});
 
-		groupBox.setFromObject(this.svgGroup);
-		groupBox.getCenter(groupCenter);
-		this.svgGroup.children.forEach(child => {
-			child.position.sub(groupCenter);
-		});
-		this.svgGroup.position.set(0, 0, 0);
-
-		const visWidth = visibleWidthAtZDepth(10, this.camera);
+		const visWidth = visibleWidthAtZDepth(0, this.camera);
 		const groupSize = getObjSize(this.svgGroup);
 		if (groupSize.x > visWidth) {
-			this.camera.position.z /= (visWidth / groupSize.x);
+			this.camera.position.divideScalar(visWidth / groupSize.x);
 		}
 
 		for (const group of this.svgGroup.children) {
@@ -249,7 +232,6 @@ class App {
 		}
 
 		const planeSize = 50;
-		const quads = [[], []];
 		for (let x = 0; x <= 1; x++) {
 			for (let y = 0; y <= 1; y++) {
 				const geometry = new THREE.PlaneGeometry(planeSize, planeSize);
@@ -257,10 +239,11 @@ class App {
 				const plane = new THREE.Mesh(geometry, material);
 				plane.position.set(Math.sign(x - 0.5) * planeSize / 2, Math.sign(y - 0.5) * planeSize / 2, 0);
 				this.scene.add(plane);
-				quads[x][y] = plane;
 			}
 		}
-		this.svgGroup.position.z += (cfg.plateDepth + cfg.letterDepth) / 2;
+		this.svgGroup.position.z += cfg.plateDepth;
+		if (cfg.mirror) this.svgGroup.position.x += getObjSize(this.svgGroup).x / 2;
+		else this.svgGroup.position.x -= getObjSize(this.svgGroup).x / 2;
 
 		const light = new THREE.AmbientLight(0xffffff, 0.5, 1);
 		light.position.set(-50, 36, 15);
@@ -283,10 +266,6 @@ class App {
 
 		const animate = () => {
 			requestAnimationFrame(animate);
-
-			if (cfg.autoRotate) {
-				this.svgGroup.rotation.y += 0.01;
-			}
 			this.#_render();
 		};
 		animate();
