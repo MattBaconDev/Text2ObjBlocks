@@ -6,6 +6,7 @@ import { enableExportScene } from './export.js';
 import { initMouse3DMover } from './mouse3dmover.js';
 import RenderController from './RenderController.js';
 import Interaction from './interaction.js';
+import { CSG } from './libs/CSGMesh.js';
 
 await import('opentype');
 
@@ -189,11 +190,27 @@ class App {
 				plateMesh.position.x = center.x + (normPadding/2) - normPadLeft;
 				plateMesh.position.y = svgGroupCenter.y;
 				plateMesh.position.z = (-meshSize.z/2) + cfg.plateOverlap;
+				plateMesh.updateMatrix();
+
+				const rad = meshSize.y / 7;
+				const cylinder = new THREE.CylinderGeometry(rad, rad, meshSize.x * 1.1, 12);
+				const cylinderMesh = new THREE.Mesh(cylinder, this.plateMat.clone());
+				cylinderMesh.position.copy(plateMesh.position);
+				cylinderMesh.position.y += meshSize.y / 2;
+				cylinderMesh.rotation.z = degreesToEuler(90);
+				cylinderMesh.updateMatrix();
+
+				const plateCSG = CSG.fromMesh(plateMesh, 0);
+				const cylCSG = CSG.fromMesh(cylinderMesh, 1);
+				const subbed = plateCSG.subtract(cylCSG);
+				const subMesh = CSG.toMesh(subbed, plateMesh.matrix);
+				subMesh.position.copy(plateMesh.position);
+				subMesh.material = this.plateMat.clone();
 
 				const letterGroup = new THREE.Group();
 				letterGroup.name = 'letter_' + letter.name;
 				letterGroup.add(letter);
-				letterGroup.add(plateMesh);
+				letterGroup.add(subMesh);
 				if (cfg.mirrored) letterGroup.scale.multiply(new THREE.Vector3(-1, 1, 1));
 				this.svgGroup.add(letterGroup);
 				this.interaction.applySelection(letterGroup);
@@ -334,6 +351,9 @@ function getMeshName(chars, pathIdx) {
 		name += '-' + countSoFar;
 	}
 	return name;
+}
+function degreesToEuler(degrees) {
+	return degrees * Math.PI / 180;
 }
 function getGlyphInfo(char, size) {
 	const unicode = char.charCodeAt(0);
