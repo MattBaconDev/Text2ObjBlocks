@@ -28,7 +28,7 @@ const cfg = {
 	defaultColour: 0x666666,
 	selectedColour: 0x00ff00,
 	orthCamera: false,
-	targetRatio: 0.75,
+	targetRatio: 0.65,
 	sensitivity: {
 		pan: 1,
 		rotate: 1,
