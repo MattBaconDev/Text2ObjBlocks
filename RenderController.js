@@ -3,9 +3,11 @@ export default class RenderController {
         this.app = app;
 		this.app.elements.letterDepthInput.setAttribute('value', app.cfg.letterDepth);
 		this.app.elements.blockDepthInput.setAttribute('value', app.cfg.plateDepth);
+		this.app.elements.fontSizeInput.setAttribute('value', app.cfg.fontSize);
 		this.app.elements.linoModeInput.setAttribute('checked', app.cfg.linoMode);
 		this.app.elements.letterDepthInput.addEventListener('input', this.handleDepthChange.bind(this));
 		this.app.elements.blockDepthInput.addEventListener('input', this.handleDepthChange.bind(this));
+		this.app.elements.fontSizeInput.addEventListener('input', this.handleFontSizeChange.bind(this));
 		this.app.elements.linoModeInput.addEventListener('change', this.handleLinoModeChange.bind(this));
     }
 
@@ -19,6 +21,11 @@ export default class RenderController {
         }
         this.app.render();
     }
+
+	handleFontSizeChange(event) {
+		this.app.cfg.fontSize = parseFloat(event.target.value);
+		this.app.render();
+	}
 
 	handleLinoModeChange(event) {
 		this.app.cfg.linoMode = event.target.checked;
