@@ -21,6 +21,7 @@ const cfg = {
 	plateXPadding: 0,
 	plateYPadding: 0,
 	centreAlign: false,
+	linoMode: false,
 	defaultColour: 0x666666,
 	selectedColour: 0x00ff00,
 	orthCamera: false,
@@ -46,6 +47,7 @@ const elements = {
 	letterDepthInput: getElById('letter-depth'),
 	blockDepthInput: getElById('block-depth'),
 	resetViewBtn: getElById('reset-view-btn'),
+	linoModeInput: getElById('lino-mode'),
 };
 
 class App {
@@ -145,30 +147,50 @@ class App {
 		this.svgGroup.rotation.copy(this.groupRotation);
 		this.scene.add(this.svgGroup);
 
-		for (const letter of letters) {
-			const i = letters.indexOf(letter);
-			const center = getObjCenter(letter);
-			const size = sizes[i];
-			const unicode = letter.name.charCodeAt(0);
-			const glyph = Object.values(this.font.glyphs.glyphs).find(g => g.unicode === unicode);
-			if (!glyph.rightSideBearing) glyph.rightSideBearing = glyph.getMetrics().rightSideBearing;
-			const normPadLeft = (glyph.leftSideBearing / glyph.advanceWidth) * size.x;
-			const normPadRight = (glyph.rightSideBearing / glyph.advanceWidth) * size.x;
+		if (cfg.linoMode) {
+			const startLetter = letters[0];
+			const endLetter = letters[letters.length - 1];
+			const startLetterSize = sizes[0];
+			const endLetterSize = sizes[sizes.length - 1];
+			const { normPadLeft } = getGlyphInfo(startLetter.name, startLetterSize);
+			const { normPadRight } = getGlyphInfo(endLetter.name, endLetterSize);
 			const normPadding = normPadLeft + normPadRight;
-			const plateGeo = new THREE.BoxGeometry(size.x + normPadding, groupHeight + cfg.plateYPadding, cfg.plateDepth);
+			const plateGeo = new THREE.BoxGeometry(svgGroupSize.x + normPadding, groupHeight + cfg.plateYPadding, cfg.plateDepth);
 			const plateMesh = new THREE.Mesh(plateGeo, this.plateMat.clone());
 			const meshSize = getObjSize(plateMesh);
-			plateMesh.position.x = center.x + (normPadding/2) - normPadLeft;
+			plateMesh.position.x = svgGroupCenter.x + (normPadding/2) - normPadLeft;
 			plateMesh.position.y = svgGroupCenter.y;
 			plateMesh.position.z = (-meshSize.z/2) + cfg.plateOverlap;
 
 			const letterGroup = new THREE.Group();
-			letterGroup.name = 'letter_' + letter.name;
-			letterGroup.add(letter);
+			letterGroup.name = 'lino_' + text;
+			letterGroup.add(...letters);
 			letterGroup.add(plateMesh);
 			if (cfg.mirrored) letterGroup.scale.multiply(new THREE.Vector3(-1, 1, 1));
 			this.svgGroup.add(letterGroup);
 			this.interaction.applySelection(letterGroup);
+		}
+		else {
+			for (const letter of letters) {
+				const i = letters.indexOf(letter);
+				const center = getObjCenter(letter);
+				const size = sizes[i];
+				const { normPadLeft, normPadding } = getGlyphInfo(letter.name, size);
+				const plateGeo = new THREE.BoxGeometry(size.x + normPadding, groupHeight + cfg.plateYPadding, cfg.plateDepth);
+				const plateMesh = new THREE.Mesh(plateGeo, this.plateMat.clone());
+				const meshSize = getObjSize(plateMesh);
+				plateMesh.position.x = center.x + (normPadding/2) - normPadLeft;
+				plateMesh.position.y = svgGroupCenter.y;
+				plateMesh.position.z = (-meshSize.z/2) + cfg.plateOverlap;
+
+				const letterGroup = new THREE.Group();
+				letterGroup.name = 'letter_' + letter.name;
+				letterGroup.add(letter);
+				letterGroup.add(plateMesh);
+				if (cfg.mirrored) letterGroup.scale.multiply(new THREE.Vector3(-1, 1, 1));
+				this.svgGroup.add(letterGroup);
+				this.interaction.applySelection(letterGroup);
+			}
 		}
 
 		// Center svgGroup children to the group
@@ -305,6 +327,15 @@ function getMeshName(chars, pathIdx) {
 		name += '-' + countSoFar;
 	}
 	return name;
+}
+function getGlyphInfo(char, size) {
+	const unicode = char.charCodeAt(0);
+	const glyph = Object.values(app.font.glyphs.glyphs).find(g => g.unicode === unicode);
+	if (!glyph.rightSideBearing) glyph.rightSideBearing = glyph.getMetrics().rightSideBearing;
+	const normPadLeft = (glyph.leftSideBearing / (glyph.advanceWidth)) * size.x;
+	const normPadRight = (glyph.rightSideBearing / (glyph.advanceWidth)) * size.x;
+	const normPadding = normPadLeft + normPadRight;
+	return { normPadLeft, normPadRight, normPadding };
 }
 function makeMaterial(colour = 0x666666, texture = '', bumpScale = 1) {
 	let textureObj = null;

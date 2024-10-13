@@ -3,8 +3,10 @@ export default class RenderController {
         this.app = app;
 		this.app.elements.letterDepthInput.value = app.cfg.letterDepth;
 		this.app.elements.blockDepthInput.value = app.cfg.plateDepth;
+		this.app.elements.linoModeInput.checked = app.cfg.linoMode;
 		this.app.elements.letterDepthInput.addEventListener('input', this.handleDepthChange.bind(this));
 		this.app.elements.blockDepthInput.addEventListener('input', this.handleDepthChange.bind(this));
+		this.app.elements.linoModeInput.addEventListener('change', this.handleLinoModeChange.bind(this));
     }
 
     handleDepthChange(event) {
@@ -17,4 +19,9 @@ export default class RenderController {
         }
         this.app.render();
     }
+
+	handleLinoModeChange(event) {
+		this.app.cfg.linoMode = event.target.checked;
+		this.app.render();
+	}
 }
