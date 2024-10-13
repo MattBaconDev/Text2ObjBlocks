@@ -373,7 +373,7 @@ function makeMaterial(colour = 0x666666, texture = '', bumpScale = 1) {
 	return new THREE.MeshStandardMaterial({ color: colour, map: textureObj, ...(textureObj ? { bumpMap: textureObj, bumpScale } : {}) });
 }
 function emptyObject(obj) {
-	obj.children.forEach(child => obj.remove(child));
+	while(obj.children.length > 0) obj.remove(obj.children[0]);
 }
 function debugCoord(coords, colour, size = 6) {
 	const geom = new THREE.SphereGeometry(size);
