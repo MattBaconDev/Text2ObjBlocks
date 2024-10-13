@@ -219,7 +219,7 @@ class App {
 			const xBounds = { left: lPos.x, right: rPos.x };
 			if (i > 0) {
 				const dist = xBounds.left - prevXBounds.right;
-				const shift = (-dist) + Math.max(2.5, ((cfg.fontSize / 4) * cfg.letterSpacing));
+				const shift = dist*0.05;
 				child.translateX(shifted + shift);
 				shifted += shift;
 			}
