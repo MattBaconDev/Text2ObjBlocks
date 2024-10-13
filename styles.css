@@ -25,7 +25,7 @@ canvas {
 	fill: #FFF;
 	padding: 10px;
 	border: 1px dashed #49C;
-	background: repeating-linear-gradient(45deg, #6786 0px, #6786 1px, transparent 1px, transparent 10px);
+	background: repeating-linear-gradient(45deg, #6786 0px, #6786 1px, #035C 1px, #035C 10px);
 }
 body::after {
 	content: "Font / Text preview";
