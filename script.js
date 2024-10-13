@@ -22,6 +22,7 @@ const cfg = {
 	centreAlign: false,
 	defaultColour: 0x666666,
 	selectedColour: 0x00ff00,
+	orthCamera: false,
 	sensitivity: {
 		pan: 1,
 		rotate: 1,
@@ -64,11 +65,13 @@ class App {
 	constructor(container) {
 		if (!container) container = document.body;
 		this.camera = new THREE.PerspectiveCamera(25, window.innerWidth / window.innerHeight, 0.1, 1000);
+		if (cfg.orthCamera) this.camera = new THREE.OrthographicCamera(-100, 100, 100, -100, 0.1, 1000);
 		this.canvas = elements.canvas;
 		this.renderer = new THREE.WebGLRenderer({ canvas: this.canvas, antialias: true });
 		this.renderer.setSize(window.innerWidth, window.innerHeight);
 		document.body.appendChild(this.renderer.domElement);
 		this.camera.position.z = 150;
+		if (cfg.orthCamera) this.camera.scale.multiplyScalar(0.2);
 	}
 	emptyScene() {
 		emptyObject(this.svgGroup);
