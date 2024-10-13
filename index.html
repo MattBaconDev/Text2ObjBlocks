@@ -10,13 +10,12 @@
 	<div id="text-controls">
 		<input type="text" id="text-input" value="AaBbCcDdEeFfGgHhIiJjKkLlMmNnOoPpQqRrSsTtUuVvWwXxYyZz">
 	</div>
-	<div id="font-controls">
-		<label id="font-input-label" for="font-input">Custom Font</label><span id="curr-font"></span>
-		<input type="file" id="font-input" accept=".otf,.ttf,.woff,.woff2" title="Custom Font" style="visibility: hidden;">
-	</div>
 	<div id="render-controls">
-		<button id="reset-view-btn">Reset view</button>
-		<button id="zoom-fit-btn">Zoom to fit</button>
+		<div id="font-controls">
+			<div id="curr-font"></div>
+			<label id="font-input-label" for="font-input">Custom Font</label></span>
+			<input type="file" id="font-input" accept=".otf,.ttf,.woff,.woff2" title="Custom Font" style="visibility: hidden;">
+		</div>
 		<div class="render-control">
 			<label for="lino-mode">Lino Mode</label>
 			<input type="checkbox" id="lino-mode">
@@ -37,8 +36,12 @@
 			<label for="block-depth">Block Depth</label>
 			<input type="number" id="block-depth" min="0" max="25" value="8" step="0.5">
 		</div>
-		<div class="render-info">
-			Full depth:<span id="full-depth">??</span>
+		<div id="render-info">
+			<div class="render-info-item">Full depth: <span id="full-depth">??</span></div>
+		</div>
+		<div id="view-buttons">
+			<button id="reset-view-btn">Reset view</button>
+			<button id="zoom-fit-btn">Zoom to fit</button>
 		</div>
 	</div>
 	<svg id="svg" width="300" height="100" viewBox="0 0 160 40"></svg>
