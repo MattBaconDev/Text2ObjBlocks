@@ -58,10 +58,10 @@ body::after {
 		border-bottom: 1px solid #CCC;
 	}
 #export-button {
-	position: absolute;
-	bottom: 0;
-	left: 0;
-	z-index: 2;
+	cursor: pointer;
+	padding: 10px;
+	font-size: 1.1em;
+	font-weight: bold;
 }
 #render-controls {
 	background: #111;
@@ -144,6 +144,8 @@ body::after {
 		display: flex;
 		flex-direction: row;
 		justify-content: space-around;
+		padding-bottom: 15px;
+		border-bottom: 1px solid #666;
 	}
 		#view-buttons button {
 			background: #333;
