@@ -209,7 +209,7 @@ class App {
 		const visWidth = visibleWidthAtZDepth(10, this.camera);
 		const groupSize = getObjSize(this.svgGroup);
 		if (groupSize.x > visWidth) {
-			this.svgGroup.scale.multiplyScalar(visWidth / groupSize.x);
+			this.camera.position.z /= (visWidth / groupSize.x);
 		}
 
 		for (const group of this.svgGroup.children) {
