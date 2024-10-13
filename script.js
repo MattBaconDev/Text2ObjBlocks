@@ -14,6 +14,7 @@ const cfg = {
 	autoRotate: false,
 	mirrored: true,
 	fontSize: 15,
+	plateOverlap: 0.1,
 	letterSpacing: 1,
 	letterDepth: 2,
 	plateDepth: 21.318,
@@ -29,6 +30,7 @@ const cfg = {
 		zoom: 1
 	}
 };
+cfg.letterDepth += cfg.plateOverlap;
 
 function getElById(id) {
 	return document.getElementById(id);
@@ -158,7 +160,7 @@ class App {
 			const meshSize = getObjSize(plateMesh);
 			plateMesh.position.x = center.x + (normPadding/2) - normPadLeft;
 			plateMesh.position.y = svgGroupCenter.y;
-			plateMesh.position.z = (-meshSize.z/2) + 0.1;
+			plateMesh.position.z = (-meshSize.z/2) + cfg.plateOverlap;
 
 			const letterGroup = new THREE.Group();
 			letterGroup.name = 'letter_' + letter.name;
