@@ -48,6 +48,7 @@ const elements = {
 	resetViewBtn: getElById('reset-view-btn'),
 	linoModeInput: getElById('lino-mode'),
 	fontSizeInput: getElById('font-size'),
+	fullDepth: getElById('full-depth'),
 };
 
 class App {
