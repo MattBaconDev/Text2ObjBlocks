@@ -24,16 +24,16 @@ export function initMouse3DMover(app, hostEl) {
 		if (dx + dy > 0) e.preventDefault();
 		if (!app.svgGroup) return
 		if (isPanning) {
-			app.svgGroup.position.x += dx * 0.08 * app.cfg.sensitivity.pan;
-			app.svgGroup.position.y -= dy * 0.08 * app.cfg.sensitivity.pan;
+			app.scene.position.x += dx * 0.08 * app.cfg.sensitivity.pan;
+			app.scene.position.y -= dy * 0.08 * app.cfg.sensitivity.pan;
 		}
 		else {
-			app.svgGroup.rotation.y += dx * 0.004 * app.cfg.sensitivity.rotate;
-			app.svgGroup.rotation.x += dy * 0.004 * app.cfg.sensitivity.rotate;
+			app.scene.rotation.y += dx * 0.004 * app.cfg.sensitivity.rotate;
+			app.scene.rotation.x += dy * 0.004 * app.cfg.sensitivity.rotate;
 		}
 	});
 
 	hostEl.addEventListener('wheel', e => {
-		app.svgGroup.position.z -= e.deltaY * 0.05 * app.cfg.sensitivity.zoom;
+		app.scene.position.z -= e.deltaY * 0.05 * app.cfg.sensitivity.zoom;
 	}, { passive: true });
 }
