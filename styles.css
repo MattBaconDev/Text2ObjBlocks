@@ -25,10 +25,13 @@ canvas {
 	fill: #FFF;
 	padding: 10px;
 	border: 1px dashed #49C;
+	opacity: 0.75;
 	background: repeating-linear-gradient(45deg, #6786 0px, #6786 1px, #035C 1px, #035C 10px);
+	pointer-events: none;
 }
 body::after {
 	content: "Font / Text preview";
+	pointer-events: none;
 	position: absolute;
 	bottom: 0;
 	left: 50%;
@@ -39,6 +42,7 @@ body::after {
 	font-size: 1.1em;
 	background: #DEF;
 	transform: translateX(-50%);
+	opacity: 0.8;
 }
 #text-controls {
 	position: absolute;
