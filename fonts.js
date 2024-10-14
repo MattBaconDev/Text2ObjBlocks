@@ -3,6 +3,8 @@ export default class FontProvider {
 	font = null;
 	constructor(app) {
 		this.app = app;
+		this.styleEl = document.createElement('style');
+		document.head.appendChild(this.styleEl);
 		app.elements.fontInput.addEventListener('change', async (e) => {
 			const file = e.target.files[0];
 			if (file) {
@@ -32,6 +34,13 @@ export default class FontProvider {
 						glyph.rightSideBearing = metrics.rightSideBearing;
 					}
 				});
+				this.styleEl.textContent = `
+					@font-face {
+						font-family: '${font.names.fullName.en}';
+						src: url(${fontPath});
+					}
+				`;
+				document.body.style.setProperty('--font-name', "'" + font.names.fullName.en + "'");
 				resolve(this.font);
 			});
 		});
