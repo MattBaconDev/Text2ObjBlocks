@@ -253,8 +253,8 @@ class App {
 		drawGrid(200, 10, 0xAACCEE, 0x44CCFF);
 
 		const directionalLight = new THREE.DirectionalLight(0xffffff, 3);
-		directionalLight.position.set(30, 130, 120);
-		directionalLight.target = this.svgGroup;
+		directionalLight.lookAt(this.svgGroup.position);
+		directionalLight.position.set(0, -25, 100);
 		this.scene.add(directionalLight);
 
 		this.#_render();
