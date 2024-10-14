@@ -7,6 +7,8 @@ import RenderController from './RenderController.js';
 import Interaction from './interaction.js';
 import { CSG } from './libs/CSGMesh.js';
 import CameraControls from './libs/camera-controls.module.js';
+import { TextGeometry } from 'three/addons/geometries/TextGeometry.js';
+import { FontLoader } from 'three/addons/loaders/FontLoader.js';
 
 CameraControls.install({ THREE });
 const clock = new THREE.Clock();
@@ -75,6 +77,7 @@ class App {
 	plateMat = makeMaterial(cfg.defaultColour, './textures/metal.jpg', 5);
 	letterMat = makeMaterial(cfg.defaultColour);
 	savedOrbitState = false;
+	plainFont = null;
 	needsRedraw = true;
 	constructor(container) {
 		if (!container) container = document.body;
@@ -98,8 +101,19 @@ class App {
 	getSceneName() {
 		return this.font.names.fullName.en + '_' + this.text.replace(/[^A-Za-z0-9]/g, '').substring(0, 5);
 	}
+	async loadPlainFont() {
+		if (this.plainFont) return this.plainFont;
+		const floader = new FontLoader();
+		return new Promise((resolve, reject) => {
+			floader.load('./fonts/Roboto_Regular.json', (font) => {
+				this.plainFont = font;
+				resolve(font);
+			});
+		});
+	}
 	async render() {
 		await this.fontProvider.load(this.fontPath);
+		await this.loadPlainFont();
 		elements.currFont.textContent = this.font.names.fullName.en;
 		if (this.initialised) {
 			this.groupRotation = this.svgGroup.rotation.clone();
@@ -333,6 +347,19 @@ function drawGrid(size, sqSize, axisColour = 0xFFCCFFCC, gridLineColour = 0x2266
 	grid.rotateX(degreesToEuler(90));
 	app.scene.add(grid);
 	return grid;
+}
+function drawText(text, position, size = 8) {
+	const geometry = new TextGeometry(String(text), {
+		font: app.plainFont,
+		size: size,
+		depth: 0.1,
+		bevelEnabled: false
+	});
+	const textMesh = new THREE.Mesh(geometry, new THREE.MeshStandardMaterial({ color: 0xffffff }));
+	if (position instanceof Array) position = new THREE.Vector3(...position);
+	textMesh.position.copy(position);
+	app.scene.add(textMesh);
+	return textMesh;
 }
 function degreesToEuler(degrees) {
 	return degrees * Math.PI / 180;
