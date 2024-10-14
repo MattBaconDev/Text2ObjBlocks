@@ -75,6 +75,7 @@ class App {
 	plateMat = makeMaterial(cfg.defaultColour, './textures/metal.jpg', 5);
 	letterMat = makeMaterial(cfg.defaultColour);
 	savedOrbitState = false;
+	needsRedraw = true;
 	constructor(container) {
 		if (!container) container = document.body;
 		this.camera = new THREE.PerspectiveCamera(25, window.innerWidth / window.innerHeight, 0.1, 5000);
@@ -257,14 +258,16 @@ class App {
 		this.initialise();
 	}
 	#_render() {
+		if (!this.needsRedraw) return;
 		this.renderer.render(this.scene, this.camera);
+		this.needsRedraw = false;
 	}
 	initialise() {
 		if (this.initialised) return;
 
 		const animate = () => {
 			const delta = clock.getDelta();
-			this.cameraControls.update(delta);
+			this.needsRedraw = this.needsRedraw || this.cameraControls.update(delta);
 			requestAnimationFrame(animate);
 			this.#_render();
 		};
@@ -274,6 +277,7 @@ class App {
 			app.camera.aspect = window.innerWidth / window.innerHeight;
 			app.camera.updateProjectionMatrix();
 			app.renderer.setSize(window.innerWidth, window.innerHeight);
+			app.needsRedraw = true;
 		}, false);
 
 		this.interaction.init();
@@ -281,6 +285,8 @@ class App {
 		this.#_render();
 		this.zoomToFit();
 		this.cameraControls.saveState();
+		this.cameraControls.draggingSmoothTime = 0.1;
+		this.cameraControls.smoothTime = 0.1;
 	}
 	zoomToFit() {
 		const groupSize = getObjSize(this.svgGroup);

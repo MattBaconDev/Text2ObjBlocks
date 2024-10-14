@@ -61,6 +61,7 @@ export default class Interaction {
 		group.children.forEach(child => {
 			child.material.color.set(selected ? this.app.cfg.selectedColour : this.app.cfg.defaultColour);
 		});
+		this.app.needsRedraw = true;
 	}
 	#_updateMouse(ev) {
 		this.mouse.x = (ev.clientX / this.app.canvas.clientWidth) * 2 - 1;
@@ -88,21 +89,27 @@ export default class Interaction {
 		if (ev.key === 'Escape') return this.clearSelection();
 		if (ev.key === ']') {
 			this.selectedLetterMesh.scale.z += 0.1;
+			this.app.needsRedraw = true;
 		}
 		if (ev.key === '[') {
 			this.selectedLetterMesh.scale.z -= 0.1;
+			this.app.needsRedraw = true;
 		}
 		if (ev.key === 'ArrowUp') {
 			this.selectedLetterMesh.position.y -= 0.1;
+			this.app.needsRedraw = true;
 		}
 		if (ev.key === 'ArrowDown') {
 			this.selectedLetterMesh.position.y += 0.1;
+			this.app.needsRedraw = true;
 		}
 		if (ev.key === 'ArrowLeft') {
 			this.selectedLetterMesh.position.x += 0.1;
+			this.app.needsRedraw = true;
 		}
 		if (ev.key === 'ArrowRight') {
 			this.selectedLetterMesh.position.x -= 0.1;
+			this.app.needsRedraw = true;
 		}
 	}
 	resetChanges(mesh = null) {
@@ -116,5 +123,6 @@ export default class Interaction {
 		}
 		mesh.scale.copy(mesh.userData.originalScale);
 		mesh.position.copy(mesh.userData.originalPosition);
+		this.app.needsRedraw = true;
 	}
 }
