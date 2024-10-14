@@ -231,7 +231,7 @@ class App {
 			const xBounds = { left: lPos.x, right: rPos.x };
 			if (i > 0) {
 				const dist = xBounds.left - prevXBounds.right;
-				const shift = dist*0.05;
+				const shift = dist * 0.1;
 				child.translateX(shifted + shift);
 				shifted += shift;
 			}
