@@ -393,7 +393,7 @@ function makeMaterial(colour = 0x666666, texture = '', bumpScale = 1) {
 	return new THREE.MeshStandardMaterial({ color: colour, map: textureObj, ...(textureObj ? { bumpMap: textureObj, bumpScale } : {}) });
 }
 function emptyObject(obj) {
-	while(obj.children.length > 0) obj.remove(obj.children[0]);
+	while (obj.children.length > 0) obj.remove(obj.children[0]);
 }
 const debugColours = [0x0000ff, 0x00ff00, 0xff0000, 0xffff00, 0xff00ff, 0x00ffff, 0xffffff];
 function debugCoord(coords, colour, size = 6) {
