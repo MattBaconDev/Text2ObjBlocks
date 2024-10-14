@@ -231,23 +231,12 @@ class App {
 			group.children[1].userData.originalPosition = group.children[1].position.clone();
 		}
 
-		const planeSize = 50;
-		for (let x = 0; x <= 1; x++) {
-			for (let y = 0; y <= 1; y++) {
-				const geometry = new THREE.PlaneGeometry(planeSize, planeSize);
-				const material = new THREE.MeshBasicMaterial({ color: 0x66CCFF, side: THREE.DoubleSide, wireframe: true });
-				const plane = new THREE.Mesh(geometry, material);
-				plane.position.set(Math.sign(x - 0.5) * planeSize / 2, Math.sign(y - 0.5) * planeSize / 2, 0);
-				this.scene.add(plane);
-			}
-		}
 		this.svgGroup.position.z += cfg.plateDepth;
 		if (cfg.mirror) this.svgGroup.position.x += getObjSize(this.svgGroup).x / 2;
 		else this.svgGroup.position.x -= getObjSize(this.svgGroup).x / 2;
 
-		const light = new THREE.AmbientLight(0xffffff, 0.5, 1);
-		light.position.set(-50, 36, 15);
-		this.scene.add(light);
+		drawGrid(200, 1, 0xAACCEE, 0x226699);
+		drawGrid(200, 10, 0xAACCEE, 0x44CCFF);
 
 		const directionalLight = new THREE.DirectionalLight(0xffffff, 3);
 		directionalLight.position.set(30, 130, 120);
@@ -337,6 +326,13 @@ function getMeshName(chars, pathIdx) {
 		name += '-' + countSoFar;
 	}
 	return name;
+}
+function drawGrid(size, sqSize, axisColour = 0xFFCCFFCC, gridLineColour = 0x226699) {
+	const divs = size / sqSize;
+	const grid = new THREE.GridHelper(size, divs, axisColour, gridLineColour);
+	grid.rotateX(degreesToEuler(90));
+	app.scene.add(grid);
+	return grid;
 }
 function degreesToEuler(degrees) {
 	return degrees * Math.PI / 180;
