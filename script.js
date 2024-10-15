@@ -17,7 +17,7 @@ await import('opentype');
 
 const cfg = {
 	defaultFontPath: './fonts/Roboto-Regular.ttf',
-	mirror: true,
+	mirror: false,
 	fontSize: 15,
 	plateOverlap: 0.1,
 	letterSpacing: 1,
