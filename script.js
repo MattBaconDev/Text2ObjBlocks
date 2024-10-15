@@ -20,7 +20,7 @@ const cfg = {
 	mirror: false,
 	fontSize: 15,
 	plateOverlap: 0.1,
-	letterSpacing: 1,
+	letterSpacing: 0,
 	letterDepth: 2,
 	plateDepth: 21.318,
 	plateXPadding: 0,
@@ -217,23 +217,12 @@ class App {
 			}
 		}
 
-		let prevXBounds = { left: 0, right: 0 };
 		let shifted = 0;
-
 		this.svgGroup.children.forEach((child, i) => {
-			const centre = getObjCenter(child);
-			const l = centre.x - sizes[i].x / 2;
-			const r = centre.x + sizes[i].x / 2;
-			const lPos = new THREE.Vector3(l, centre.y, centre.z);
-			const rPos = new THREE.Vector3(r, centre.y, centre.z);
-			const xBounds = { left: lPos.x, right: rPos.x };
-			if (i > 0) {
-				const dist = xBounds.left - prevXBounds.right;
-				const shift = dist * 0.1;
-				child.translateX(shifted + shift);
-				shifted += shift;
-			}
-			prevXBounds = xBounds;
+			if (i === 0) return;
+			const shift = cfg.letterSpacing;
+			child.translateX(shifted + shift);
+			shifted += shift;
 		});
 
 		for (const group of this.svgGroup.children) {
