@@ -188,7 +188,6 @@ class App {
 			letterGroup.name = 'lino_' + text;
 			letterGroup.add(...letters);
 			letterGroup.add(subbedPlateMesh);
-			if (cfg.mirror) letterGroup.scale.multiply(new THREE.Vector3(-1, 1, 1));
 			this.svgGroup.add(letterGroup);
 			this.interaction.applySelection(letterGroup);
 		}
@@ -213,7 +212,6 @@ class App {
 				letterGroup.add(letter);
 				letterGroup.add(subbedPlateMesh);
 				letterGroup.position.set(0, 0, 0);
-				if (cfg.mirror) letterGroup.scale.multiply(new THREE.Vector3(-1, 1, 1));
 				this.svgGroup.add(letterGroup);
 				this.interaction.applySelection(letterGroup);
 			}
@@ -245,9 +243,10 @@ class App {
 			group.children[1].userData.originalPosition = group.children[1].position.clone();
 		}
 
+		this.svgGroup.updateMatrix();
+		const groupSize = getObjSize(this.svgGroup);
 		this.svgGroup.position.z += cfg.plateDepth;
-		if (cfg.mirror) this.svgGroup.position.x += getObjSize(this.svgGroup).x / 2;
-		else this.svgGroup.position.x -= getObjSize(this.svgGroup).x / 2;
+		this.svgGroup.position.x = groupSize.x / -2;
 
 		drawGrid(200, 1, 0xAACCEE, 0x226699);
 		drawGrid(200, 10, 0xAACCEE, 0x44CCFF);
@@ -257,6 +256,11 @@ class App {
 		directionalLight.position.set(0, -25, 100);
 		this.scene.add(directionalLight);
 
+		this.svgGroup.updateMatrix();
+		this.scene.updateMatrix();
+		if ((cfg.mirror && this.scene.scale.x > 0) || (!cfg.mirror && this.scene.scale.x < 0)) {
+			this.scene.scale.multiply(new THREE.Vector3(-1, 1, 1));
+		}
 		this.#_render();
 		this.initialise();
 	}
