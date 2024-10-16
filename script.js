@@ -57,20 +57,8 @@ const elements = {
 	fontInput: getElById('font-input'),
 	textInput: getElById('text-input'),
 	exportButton: getElById('export-button'),
-	letterDepthInput: getElById('letter-depth'),
-	blockDepthInput: getElById('block-depth'),
 	resetViewBtn: getElById('reset-view-btn'),
 	zoomFitBtn: getElById('zoom-fit-btn'),
-	linoModeInput: getElById('lino-mode'),
-	fontSizeInput: getElById('font-size'),
-	fullDepth: getElById('full-depth'),
-	mirrorModeInput: getElById('mirror-mode'),
-	lineSpacingInput: getElById('line-spacing'),
-	lineSpacingAuto: getElById('line-spacing-auto'),
-	letterSpacingInput: getElById('letter-spacing'),
-	letterSpacingAuto: getElById('letter-spacing-auto'),
-	plateXPaddingInput: getElById('plate-x-padding'),
-	plateYPaddingInput: getElById('plate-y-padding'),
 };
 
 class App {
