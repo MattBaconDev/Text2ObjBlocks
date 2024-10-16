@@ -9,6 +9,12 @@ export default class Interaction {
 		this.selectedChar = null;
 		this.mouseDownChar = null;
 	}
+	get selectedBlock() {
+		return this.selectedChar ? this.#_getCharBlock(this.selectedChar) : null;
+	}
+	#_getCharBlock(char) {
+		return this.app.getMeshByName('block_' + char.name);
+	}
 	clearSelection() {
 		if (!this.selectedChar) return;
 		this.applySelection(this.selectedChar, false);
@@ -51,7 +57,7 @@ export default class Interaction {
 			this.selectedChar = char;
 		}
 		char.material.color.set(selected ? this.app.cfg.selectedColour : this.app.cfg.defaultColour);
-		const block = this.app.getMeshByName('block_' + char.name);
+		const block = this.#_getCharBlock(char);
 		if (block) {
 			block.material.color.set(selected ? this.app.cfg.selectedColour : this.app.cfg.defaultColour);
 		}
@@ -88,28 +94,32 @@ export default class Interaction {
 		}
 		if (!this.selectedChar) return;
 		if (ev.key === 'Escape') return this.clearSelection();
+		const editMeshes = [this.selectedChar];
+		const selBlock = this.selectedBlock;
+		if (ev.shiftKey && selBlock) editMeshes.push(selBlock);
+		if (ev.ctrlKey && selBlock) editMeshes.splice(0, 1, selBlock);
 		if (ev.key === ']') {
-			this.selectedChar.scale.z += 0.1;
+			editMeshes.forEach(m => m.scale.z += 0.1);
 			this.app.needsRedraw = true;
 		}
 		if (ev.key === '[') {
-			this.selectedChar.scale.z -= 0.1;
+			editMeshes.forEach(m => m.scale.z -= 0.1);
 			this.app.needsRedraw = true;
 		}
 		if (ev.key === 'ArrowUp') {
-			this.selectedChar.position.y -= 0.1;
+			editMeshes.forEach(m => m.position.y -= 0.1);
 			this.app.needsRedraw = true;
 		}
 		if (ev.key === 'ArrowDown') {
-			this.selectedChar.position.y += 0.1;
+			editMeshes.forEach(m => m.position.y += 0.1);
 			this.app.needsRedraw = true;
 		}
 		if (ev.key === 'ArrowLeft') {
-			this.selectedChar.position.x += 0.1 * (this.app.cfg.mirror ? 1 : -1);
+			editMeshes.forEach(m => m.position.x += 0.1 * (this.app.cfg.mirror ? 1 : -1));
 			this.app.needsRedraw = true;
 		}
 		if (ev.key === 'ArrowRight') {
-			this.selectedChar.position.x -= 0.1 * (this.app.cfg.mirror ? 1 : -1);
+			editMeshes.forEach(m => m.position.x -= 0.1 * (this.app.cfg.mirror ? 1 : -1));
 			this.app.needsRedraw = true;
 		}
 	}
