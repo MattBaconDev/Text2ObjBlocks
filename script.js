@@ -450,16 +450,19 @@ function degreesToEuler(degrees) {
 	return degrees * Math.PI / 180;
 }
 function getObjSize(obj) {
-	const box = new THREE.Box3().setFromObject(obj);
+	const box = getObjBox(obj);
 	const size = new THREE.Vector3();
 	box.getSize(size);
 	return size;
 }
 function getObjCenter(obj) {
-	const box = new THREE.Box3().setFromObject(obj);
+	const box = getObjBox(obj);
 	const center = new THREE.Vector3();
 	box.getCenter(center);
 	return center;
+}
+function getObjBox(obj) {
+	return new THREE.Box3().setFromObject(obj);
 }
 function getGlyphInfo(char, size) {
 	const unicode = char.charCodeAt(0);
