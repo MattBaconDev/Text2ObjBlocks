@@ -5,23 +5,14 @@ export default class Interaction {
 		this.app = app;
 		this.raycaster = new THREE.Raycaster();
 		this.mouse = new THREE.Vector2();
-		this.overGroup = null;
-		this.selectedGroup = null;
-		this.mouseDownGroup = null;
-	}
-	get selectedLetter() {
-		return this.selectedGroup?.name.split('_')[1];
-	}
-	get selectedLetterMesh() {
-		return this.selectedGroup?.children[0];
-	}
-	get selectedPlateMesh() {
-		return this.selectedGroup?.children[1];
+		this.overChar = null;
+		this.selectedChar = null;
+		this.mouseDownChar = null;
 	}
 	clearSelection() {
-		if (!this.selectedGroup) return;
-		this.applySelection(this.selectedGroup, false);
-		this.selectedGroup = null;
+		if (!this.selectedChar) return;
+		this.applySelection(this.selectedChar, false);
+		this.selectedChar = null;
 	}
 	init() {
 		this.app.canvas.addEventListener('mousemove', this.onMouseMove.bind(this));
@@ -31,36 +22,38 @@ export default class Interaction {
 	}
 	onMouseMove(ev) {
 		this.#_updateMouse(ev);
-		const group = this.#_groupUnderMouse();
-		if (group !== this.overGroup) {
-			this.overGroup = group;
+		const char = this.#_charUnderMouse();
+		if (char !== this.overChar) {
+			this.overChar = char;
 		}
 	}
 	onMouseDown(ev) {
 		this.#_updateMouse(ev);
-		this.mouseDownGroup = this.overGroup;
+		this.mouseDownChar = this.overChar;
 	}
 	onClick(ev) {
 		this.#_updateMouse(ev);
-		const group = this.#_groupUnderMouse();
-		if (group !== this.selectedGroup && group === this.mouseDownGroup) {
-			const prevSelection = this.selectedGroup;
-			this.selectedGroup = group;
+		const char = this.#_charUnderMouse();
+		if (char !== this.selectedChar && char === this.mouseDownChar) {
+			const prevSelection = this.selectedChar;
+			this.selectedChar = char;
 			if (prevSelection) {
 				this.applySelection(prevSelection, false);
 			}
-			if (!group) return;
-			this.applySelection(group);
+			if (!char) return;
+			this.applySelection(char, true);
 		}
 	}
-	applySelection(group, force = null) {
-		const selected = typeof force === 'boolean' ? force : group.name === this.selectedGroup?.name;
-		if (selected && group !== this.selectedGroup && group.name === this.selectedGroup.name) {
-			this.selectedGroup = group;
+	applySelection(char, force = null) {
+		const selected = typeof force === 'boolean' ? force : char.name === this.selectedChar?.name;
+		if (selected && char !== this.selectedChar && char.name === this.selectedChar.name) {
+			this.selectedChar = char;
 		}
-		group.children.forEach(child => {
-			child.material.color.set(selected ? this.app.cfg.selectedColour : this.app.cfg.defaultColour);
-		});
+		char.material.color.set(selected ? this.app.cfg.selectedColour : this.app.cfg.defaultColour);
+		const block = this.app.getMeshByName('block_' + char.name);
+		if (block) {
+			block.material.color.set(selected ? this.app.cfg.selectedColour : this.app.cfg.defaultColour);
+		}
 		this.app.needsRedraw = true;
 	}
 	#_updateMouse(ev) {
@@ -75,50 +68,49 @@ export default class Interaction {
 	#_meshUnderMouse() {
 		return this.#_rayCast()[0]?.object;
 	}
-	#_groupUnderMouse() {
-		const mesh = this.#_meshUnderMouse();
-		const parent = mesh?.parent;
-		if (!parent) return null;
-		if (parent.name.startsWith('letter_')) return parent;
+	#_charUnderMouse() {
+		let mesh = this.#_meshUnderMouse();
+		if (!mesh) return null;
+		if (mesh.userData.type === 'block') {
+			mesh = this.app.getMeshByName(mesh.name.replace('block_', ''));
+		}
+		if (!mesh ||mesh.userData.type !== 'char') return null;
+		return mesh;
 	}
 	onKeyDown(ev) {
 		if (ev.key === 'Backspace') {
-			this.resetChanges(this.selectedLetterMesh);
+			this.resetChanges(this.selectedChar);
 		}
-		if (!this.selectedGroup) return;
+		if (!this.selectedChar) return;
 		if (ev.key === 'Escape') return this.clearSelection();
 		if (ev.key === ']') {
-			this.selectedLetterMesh.scale.z += 0.1;
+			this.selectedChar.scale.z += 0.1;
 			this.app.needsRedraw = true;
 		}
 		if (ev.key === '[') {
-			this.selectedLetterMesh.scale.z -= 0.1;
+			this.selectedChar.scale.z -= 0.1;
 			this.app.needsRedraw = true;
 		}
 		if (ev.key === 'ArrowUp') {
-			this.selectedLetterMesh.position.y -= 0.1;
+			this.selectedChar.position.y -= 0.1;
 			this.app.needsRedraw = true;
 		}
 		if (ev.key === 'ArrowDown') {
-			this.selectedLetterMesh.position.y += 0.1;
+			this.selectedChar.position.y += 0.1;
 			this.app.needsRedraw = true;
 		}
 		if (ev.key === 'ArrowLeft') {
-			this.selectedLetterMesh.position.x += 0.1;
+			this.selectedChar.position.x += 0.1 * (this.app.cfg.mirror ? 1 : -1);
 			this.app.needsRedraw = true;
 		}
 		if (ev.key === 'ArrowRight') {
-			this.selectedLetterMesh.position.x -= 0.1;
+			this.selectedChar.position.x -= 0.1 * (this.app.cfg.mirror ? 1 : -1);
 			this.app.needsRedraw = true;
 		}
 	}
 	resetChanges(mesh = null) {
 		if (!mesh) {
-			this.app.svgGroup.children.forEach(group => {
-				group.children.forEach(child => {
-					this.resetChanges(child);
-				});
-			});
+			this.app.getMeshByType('char').forEach(mesh => this.resetChanges(mesh));
 			return;
 		}
 		mesh.scale.copy(mesh.userData.originalScale);

@@ -17,10 +17,12 @@ await import('opentype');
 
 const cfg = {
 	defaultFontPath: './fonts/Roboto-Regular.ttf',
+	defaultValue: 'ABC',
 	mirror: false,
 	fontSize: 15,
 	plateOverlap: 0.1,
-	letterSpacing: 0,
+	letterSpacing: 'auto',
+	lineSpacing: 'auto',
 	letterDepth: 2,
 	plateDepth: 21.318,
 	plateXPadding: 0,
@@ -37,6 +39,12 @@ const cfg = {
 		zoom: 1
 	}
 };
+cfg.defaultValue = `ABCDEFGHIJKLMN
+OPQRSTUVWXYZ
+abcdefghijklmn
+opqrstuvwxyz
+1234567890
+`;
 
 function getElById(id) {
 	return document.getElementById(id);
@@ -66,10 +74,11 @@ class App {
 		return this.fontProvider.font;
 	}
 	text = '';
+	lines = [];
+	meshes = [];
 	scene = new THREE.Scene();
 	svgGroup = new THREE.Group();
 	initialised = false;
-	groupRotation = new THREE.Euler(0, 0, 0);
 	fontPath = cfg.defaultFontPath;
 	fontProvider = new FontProvider(this);
 	renderController = new RenderController(this);
@@ -93,6 +102,7 @@ class App {
 		if (cfg.orthCamera) this.camera.scale.multiplyScalar(0.2);
 		this.scene.background = new THREE.Color(0x053555);
 		this.cameraControls = new CameraControls(this.camera, this.renderer.domElement);
+		elements.textInput.value = cfg.defaultValue;
 	}
 	emptyScene() {
 		emptyObject(this.svgGroup);
@@ -100,6 +110,12 @@ class App {
 	}
 	getSceneName() {
 		return this.font.names.fullName.en + '_' + this.text.replace(/[^A-Za-z0-9]/g, '').substring(0, 5);
+	}
+	getMeshByName(name) {
+		return this.meshes.find(m => m.name === name);
+	}
+	getMeshByType(type) {
+		return this.meshes.filter(m => m.userData.type === type);
 	}
 	async loadPlainFont() {
 		if (this.plainFont) return this.plainFont;
@@ -116,126 +132,190 @@ class App {
 		await this.loadPlainFont();
 		elements.currFont.textContent = this.font.names.fullName.en;
 		if (this.initialised) {
-			this.groupRotation = this.svgGroup.rotation.clone();
 			this.emptyScene();
 			this.#_render();
 		}
+		this.needsRedraw = true;
 		const text = elements.textInput.value.trim();
+		const lines = text.split(/(\r?\n)+/).map(line => line.trim()).filter(line => !!line);
 		this.text = text;
-		const chars = text.replace(/\s+/g, '').split('');
+		this.lines = lines;
+		const chars = lines.flatMap(line => line.replace(/\s+/g, '').split(''));
 
-		const svgData = buildSVGData(text, this.font, elements.svg);
+		previewSVG(lines, elements.svg);
 
 		this.svgGroup = new THREE.Group();
+		const allLetters = Array.from(this.svgGroup.children).slice(0, 0);
+		const allSizes = [];
+		const lineGroups = allLetters.slice();
 
-		svgData.paths.forEach((path, i) => {
-			const shapes = SVGLoader.createShapes(path);
-			const letterGeos = [];
-			shapes.forEach((shape, j) => {
-				const geometry = new THREE.ExtrudeGeometry(shape, {
-					depth: cfg.letterDepth + cfg.plateOverlap,
-					bevelEnabled: false,
+		let tallestLetter = 0;
+		let maxLetterY = 0;
+		let minLetterY = 0;
+		let charIdx = 0;
+		lines.forEach((line, lineIdx) => {
+			const svgData = buildSVGData(line, this.font, elements.svg);
+			const lineLetters = [];
+			const lineGroup = new THREE.Group();
+			lineGroup.name = 'line_' + lineIdx;
+			svgData.paths.forEach((path, i) => {
+				const shapes = SVGLoader.createShapes(path);
+				const letterGeos = [];
+				shapes.forEach((shape, j) => {
+					const geometry = new THREE.ExtrudeGeometry(shape, {
+						depth: cfg.letterDepth + cfg.plateOverlap,
+						bevelEnabled: false,
+					});
+					letterGeos.push(geometry);
 				});
-				letterGeos.push(geometry);
+				const bufferGeo = BufferGeometryUtils.mergeGeometries(letterGeos, false);
+				const letterMesh = new THREE.Mesh(bufferGeo, this.letterMat.clone());
+				const letterSize = getObjSize(letterMesh);
+				letterMesh.name = getMeshName(chars, charIdx);
+				letterMesh.userData.lineIdx = lineIdx;
+				letterMesh.userData.lineCharIdx = i;
+				letterMesh.userData.charIdx = charIdx;
+				letterMesh.userData.type = 'char';
+				const letterHeight = letterSize.y;
+				tallestLetter = Math.max(tallestLetter, letterHeight);
+				lineLetters.push(letterMesh);
+				charIdx++;
 			});
-			const bufferGeo = BufferGeometryUtils.mergeGeometries(letterGeos, false);
-			const letterMesh = new THREE.Mesh(bufferGeo, this.letterMat.clone());
-			letterMesh.name = getMeshName(chars, i);
-			this.svgGroup.add(letterMesh);
+			allLetters.push(...lineLetters);
+			lineGroup.add(...lineLetters);
+			let maxY = 0;
+			let minY = 0;
+			lineLetters.forEach(letter => {
+				const size = getObjSize(letter);
+				allSizes.push(size);
+				const letterCenter = getObjCenter(letter).y;
+				const letterHeight = size.y;
+				const topY = letterCenter + (letterHeight / 2);
+				const bottomY = letterCenter - (letterHeight / 2);
+				maxY = Math.max(maxY, topY);
+				minY = Math.min(minY, bottomY);
+			});
+			maxLetterY = Math.max(maxLetterY, maxY);
+			minLetterY = Math.min(minLetterY, minY);
+			lineGroups.push(lineGroup);
+			this.svgGroup.add(lineGroup);
 		});
+		tallestLetter = maxLetterY - minLetterY;
 
-		const letters = Array.from(this.svgGroup.children);
+		const blockHeight = tallestLetter + cfg.plateYPadding;
 
-		const sizes = [];
-
-		for (const letter of letters) {
-			const size = getObjSize(letter);
-			sizes.push(size);
-		}
+		const lineHeight = cfg.lineSpacing === 'auto' ? tallestLetter * 1.15 : (blockHeight + cfg.lineSpacing);
 
 		const svgGroupBox = new THREE.Box3().setFromObject(this.svgGroup);
 		const svgGroupCenter = new THREE.Vector3();
 		svgGroupBox.getCenter(svgGroupCenter);
-		const svgGroupSize = new THREE.Vector3();
-		svgGroupBox.getSize(svgGroupSize);
-
-		const groupHeight = svgGroupSize.y;
 
 		this.svgGroup.scale.y *= -1;
-		this.svgGroup.position.y = -10;
-		this.svgGroup.rotation.copy(this.groupRotation);
 		this.scene.add(this.svgGroup);
 
+		let shifted = 0;
+		lineGroups.forEach((lineGroup, lgi) => {
+			const letters = Array.from(lineGroup.children);
+			shifted = 0;
+			letters.forEach((letter, i) => {
+				if (i === 0) return;
+				const shift = cfg.letterSpacing === 'auto' ? getObjSize(letter).x/20 : cfg.letterSpacing;
+				letter.translateX(shifted + shift);
+				shifted += shift;
+			});
+		});
+
+		this.meshes = [...allLetters];
+
+		const allCenter = getObjCenter(this.svgGroup);
 		if (cfg.linoMode) {
-			const startLetter = letters[0];
-			const endLetter = letters[letters.length - 1];
-			const startLetterSize = sizes[0];
-			const endLetterSize = sizes[sizes.length - 1];
-			const { normPadLeft } = getGlyphInfo(startLetter.name, startLetterSize);
-			const { normPadRight } = getGlyphInfo(endLetter.name, endLetterSize);
-			const normPadding = normPadLeft + normPadRight;
-			const plateGeo = new THREE.BoxGeometry(svgGroupSize.x + normPadding, groupHeight + cfg.plateYPadding, cfg.plateDepth);
-			const plateMesh = new THREE.Mesh(plateGeo, this.plateMat.clone());
-			const meshSize = getObjSize(plateMesh);
-			plateMesh.position.x = svgGroupCenter.x + (normPadding / 2) - normPadLeft;
-			plateMesh.position.y = svgGroupCenter.y;
-			plateMesh.position.z = (-meshSize.z / 2) + cfg.plateOverlap;
-			plateMesh.updateMatrix();
-
-			const subbedPlateMesh = nickMesh(plateMesh, meshSize);
-
-			const letterGroup = new THREE.Group();
-			letterGroup.name = 'lino_' + text;
-			letterGroup.add(...letters);
-			letterGroup.add(subbedPlateMesh);
-			this.svgGroup.add(letterGroup);
-			this.interaction.applySelection(letterGroup);
-		}
-		else {
-			for (const letter of letters) {
-				const i = letters.indexOf(letter);
-				const center = getObjCenter(letter);
-				const size = sizes[i];
-				const { normPadLeft, normPadding } = getGlyphInfo(letter.name, size);
-				const plateGeo = new THREE.BoxGeometry(size.x + normPadding, groupHeight + cfg.plateYPadding, cfg.plateDepth);
+			lineGroups.forEach((lineGroup, lgi) => {
+				const lineSize = getObjSize(lineGroup);
+				const lineCenter = getObjCenter(lineGroup);
+				const letters = lineGroup.children;
+				const startLetter = letters[0];
+				const endLetter = letters[letters.length - 1];
+				const startLetterSize = allSizes[0];
+				const endLetterSize = allSizes[allSizes.length - 1];
+				const { normPadLeft } = getGlyphInfo(startLetter.name, startLetterSize);
+				const { normPadRight } = getGlyphInfo(endLetter.name, endLetterSize);
+				const normPadding = normPadLeft + normPadRight;
+				const plateGeo = new THREE.BoxGeometry(lineSize.x + normPadding, blockHeight, cfg.plateDepth);
 				const plateMesh = new THREE.Mesh(plateGeo, this.plateMat.clone());
 				const meshSize = getObjSize(plateMesh);
-				plateMesh.position.x = center.x + (normPadding / 2) - normPadLeft;
-				plateMesh.position.y = svgGroupCenter.y;
+				plateMesh.position.x = lineCenter.x;
+				plateMesh.position.y -= allCenter.y;
 				plateMesh.position.z = (-meshSize.z / 2) + cfg.plateOverlap;
 				plateMesh.updateMatrix();
 
 				const subbedPlateMesh = nickMesh(plateMesh, meshSize);
+				subbedPlateMesh.userData.type = 'block';
+				subbedPlateMesh.name = 'block_' + lines[lgi];
 
 				const letterGroup = new THREE.Group();
-				letterGroup.name = 'letter_' + letter.name;
-				letterGroup.add(letter);
+				letterGroup.name = 'line_' + lines[lgi];
+				letterGroup.add(...letters);
+				letters.forEach(letter => letter.position.y = allCenter.y);
 				letterGroup.add(subbedPlateMesh);
-				letterGroup.position.set(0, 0, 0);
+				this.meshes.push(subbedPlateMesh);
 				this.svgGroup.add(letterGroup);
-				this.interaction.applySelection(letterGroup);
+				letters.forEach(letter => this.interaction.applySelection(letter));
+				letterGroup.translateY(lgi * lineHeight);
+				lineGroups[lgi] = letterGroup;
+			});
+
+			for (const child of Array.from(lineGroups).flatMap(lg => lg.children)) {
+				if (chars.includes(child.name)) {
+					child.userData.originalScale = child.scale.clone();
+					child.userData.originalPosition = child.position.clone();
+				}
+			}
+		}
+		else {
+			lineGroups.forEach((lineGroup, lgi) => {
+				const letters = Array.from(lineGroup.children);
+				for (const letter of letters) {
+					const letterCenter = getObjCenter(letter);
+					const i = allLetters.indexOf(letter);
+					const size = allSizes[i];
+					const { normPadLeft, normPadding } = getGlyphInfo(letter.name, size);
+					const plateGeo = new THREE.BoxGeometry(size.x + normPadding, blockHeight, cfg.plateDepth);
+					const plateMesh = new THREE.Mesh(plateGeo, this.plateMat.clone());
+					const meshSize = getObjSize(plateMesh);
+					plateMesh.position.x = letterCenter.x + (normPadding / 2) - normPadLeft;
+					plateMesh.position.z = (-meshSize.z / 2) + cfg.plateOverlap;
+					plateMesh.updateMatrix();
+
+					const subbedPlateMesh = nickMesh(plateMesh, meshSize);
+					subbedPlateMesh.userData.type = 'block';
+					subbedPlateMesh.name = 'block_' + letter.name;
+
+					const letterGroup = new THREE.Group();
+					letterGroup.name = 'letter_' + letter.name;
+					letter.position.y = allCenter.y;
+					letterGroup.add(letter);
+					letterGroup.add(subbedPlateMesh);
+					this.meshes.push(subbedPlateMesh);
+					lineGroup.add(letterGroup);
+					this.interaction.applySelection(letter);
+				}
+				lineGroup.translateY(lgi * lineHeight);
+			});
+
+			for (const group of Array.from(lineGroups).flatMap(lg => lg.children)) {
+				group.children[0].userData.originalScale = group.children[0].scale.clone();
+				group.children[0].userData.originalPosition = group.children[0].position.clone();
+				group.children[1].userData.originalScale = group.children[1].scale.clone();
+				group.children[1].userData.originalPosition = group.children[1].position.clone();
 			}
 		}
 
-		let shifted = 0;
-		this.svgGroup.children.forEach((child, i) => {
-			if (i === 0) return;
-			const shift = cfg.letterSpacing;
-			child.translateX(shifted + shift);
-			shifted += shift;
-		});
-
-		for (const group of this.svgGroup.children) {
-			group.children[0].userData.originalScale = group.children[0].scale.clone();
-			group.children[0].userData.originalPosition = group.children[0].position.clone();
-			group.children[1].userData.originalScale = group.children[1].scale.clone();
-			group.children[1].userData.originalPosition = group.children[1].position.clone();
-		}
-
 		this.svgGroup.updateMatrix();
-		const groupSize = getObjSize(this.svgGroup);
+		if (cfg.mirror) this.svgGroup.scale.multiply(new THREE.Vector3(-1, 1, 1));
+		const groupCenter = getObjCenter(this.svgGroup);
 		this.svgGroup.position.z += cfg.plateDepth;
-		this.svgGroup.position.x = groupSize.x / -2;
+		this.svgGroup.position.y -= groupCenter.y;
+		this.svgGroup.position.x -= groupCenter.x;
 
 		drawGrid(200, 1, 0xAACCEE, 0x226699);
 		drawGrid(200, 10, 0xAACCEE, 0x44CCFF);
@@ -247,9 +327,6 @@ class App {
 
 		this.svgGroup.updateMatrix();
 		this.scene.updateMatrix();
-		if ((cfg.mirror && this.scene.scale.x > 0) || (!cfg.mirror && this.scene.scale.x < 0)) {
-			this.scene.scale.multiply(new THREE.Vector3(-1, 1, 1));
-		}
 		this.#_render();
 		this.initialise();
 	}
@@ -309,20 +386,29 @@ app.render();
 elements.resetViewBtn.addEventListener('click', () => app.resetView());
 elements.zoomFitBtn.addEventListener('click', () => app.zoomToFit());
 // helpers
-function buildSVGData(text, font, previewEl = null) {
+function buildSVGData(text, font) {
+	text = text.replace(/\s/g, ' ').trim();
 	const paths = font.getPaths(text, 0, 0, cfg.fontSize).filter(p => p.commands.length);
 	const svgPaths = paths.map(p => p.toSVG()).join('');
-
-	if (previewEl) {
-		const path = font.getPath(text, 0, 0, cfg.fontSize);
-		const bbox = path.getBoundingBox();
-		previewEl.setAttribute('viewBox', `${bbox.x1} ${bbox.y1} ${bbox.x2 - bbox.x1} ${bbox.y2 - bbox.y1}`);
-		previewEl.innerHTML = svgPaths;
-	}
 
 	const svgLoader = new SVGLoader();
 	const svgData = svgLoader.parse('<g>' + svgPaths + '</g>');
 	return svgData;
+}
+function previewSVG(lines, previewEl) {
+	const paths = [];
+	const bboxes = lines.map((line, i) => {
+		line = line.replace(/\s/g, ' ');
+		const path = app.font.getPath(line, 0, cfg.fontSize * i, cfg.fontSize);
+		paths.push(path);
+		return path.getBoundingBox();
+	});
+	const x1 = Math.min(...bboxes.map(b => b.x1));
+	const y1 = Math.min(...bboxes.map(b => b.y1));
+	const x2 = Math.max(...bboxes.map(b => b.x2));
+	const y2 = Math.max(...bboxes.map(b => b.y2));
+	previewEl.setAttribute('viewBox', `${x1} ${y1} ${x2 - x1} ${y2 - y1}`);
+	previewEl.innerHTML = paths.map(p => p.toSVG()).join('');
 }
 function getMeshName(chars, pathIdx) {
 	const char = chars[pathIdx];
