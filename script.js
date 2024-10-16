@@ -490,7 +490,7 @@ function debugBox(object, colour = 0xff0000) {
 function nickMesh(mesh, meshSize, mat) {
 	if (!mat) mat = mesh.material.clone();
 	const rad = Math.min(1.5, meshSize.z / 8);
-	const cylinder = new THREE.CylinderGeometry(rad, rad, meshSize.x * 1.1, 12);
+	const cylinder = new THREE.CylinderGeometry(rad, rad, meshSize.x * 1.1, 32);
 	const cylinderMesh = new THREE.Mesh(cylinder, mat);
 	cylinderMesh.position.copy(mesh.position);
 	cylinderMesh.position.y += meshSize.y / 2;
