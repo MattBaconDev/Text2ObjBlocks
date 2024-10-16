@@ -130,6 +130,15 @@ body:has(#text-input:hover,#text-input:focus) #svg {
 		padding: 3px 5px;
 		color: #FFF;
 	}
+	.render-control input[type="checkbox"][id*="auto"]:checked + input {
+		display: none;
+	}
+	.render-control input[type="number"] {
+		width: 36px;
+	}
+	#block-depth {
+		width: 60px;
+	}
 	#render-controls .render-control input:hover::before {
 		content: attr(value);
 		color: #FFF;
