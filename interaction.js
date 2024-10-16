@@ -22,18 +22,19 @@ export default class Interaction {
 	}
 	onMouseMove(ev) {
 		this.#_updateMouse(ev);
-		const char = this.#_charUnderMouse();
+		const char = this.#_charUnderMouse(false);
 		if (char !== this.overChar) {
 			this.overChar = char;
 		}
 	}
 	onMouseDown(ev) {
 		this.#_updateMouse(ev);
-		this.mouseDownChar = this.overChar;
+		const char = this.#_charUnderMouse(true);
+		this.mouseDownChar = char;
 	}
 	onClick(ev) {
 		this.#_updateMouse(ev);
-		const char = this.#_charUnderMouse();
+		const char = this.#_charUnderMouse(true);
 		if (char !== this.selectedChar && char === this.mouseDownChar) {
 			const prevSelection = this.selectedChar;
 			this.selectedChar = char;
@@ -66,13 +67,17 @@ export default class Interaction {
 		return intersects.slice(0, maxDepth);
 	}
 	#_meshUnderMouse() {
-		return this.#_rayCast()[0]?.object;
+		const { object, point } = this.#_rayCast()[0] ?? {};
+		return { object, point };
 	}
-	#_charUnderMouse() {
-		let mesh = this.#_meshUnderMouse();
+	#_charUnderMouse(allowNearby = false) {
+		let { point, object: mesh } = this.#_meshUnderMouse();
 		if (!mesh) return null;
 		if (mesh.userData.type === 'block') {
 			mesh = this.app.getMeshByName(mesh.name.replace('block_', ''));
+			if (!mesh && allowNearby) {
+				mesh = this.app.meshes.find(m => getBox(m).containsPoint(point));
+			}
 		}
 		if (!mesh ||mesh.userData.type !== 'char') return null;
 		return mesh;
@@ -117,4 +122,10 @@ export default class Interaction {
 		mesh.position.copy(mesh.userData.originalPosition);
 		this.app.needsRedraw = true;
 	}
+}
+
+function getBox(obj, expandBy = 0.5) {
+	const box = new THREE.Box3().setFromObject(obj);
+	box.expandByScalar(expandBy);
+	return box;
 }

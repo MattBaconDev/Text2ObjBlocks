@@ -262,12 +262,11 @@ class App {
 
 				const letterGroup = new THREE.Group();
 				letterGroup.name = 'line_' + lines[lgi];
+				letters.forEach(letter => this.interaction.applySelection(letter));
 				letterGroup.add(...letters);
-				letters.forEach(letter => letter.position.y = allCenter.y);
 				letterGroup.add(subbedPlateMesh);
 				this.meshes.push(subbedPlateMesh);
 				this.svgGroup.add(letterGroup);
-				letters.forEach(letter => this.interaction.applySelection(letter));
 				letterGroup.translateY(lgi * lineHeight);
 				lineGroups[lgi] = letterGroup;
 			});
