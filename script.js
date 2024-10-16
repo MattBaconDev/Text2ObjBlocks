@@ -101,6 +101,7 @@ class App {
 		this.canvas = elements.canvas;
 		this.renderer = new THREE.WebGLRenderer({ canvas: this.canvas, antialias: true });
 		this.renderer.setSize(window.innerWidth, window.innerHeight);
+		this.renderer.setPixelRatio(window.devicePixelRatio);
 		document.body.appendChild(this.renderer.domElement);
 		this.camera.position.z = 150;
 		this.camera.position.y = -250;
@@ -370,10 +371,7 @@ class App {
 		this.cameraControls.smoothTime = 0.1;
 	}
 	zoomToFit() {
-		const groupSize = getObjSize(this.svgGroup);
-		const center = getObjCenter(this.svgGroup);
-		const sphere = new THREE.Sphere(center, Math.max(50, groupSize.x * 0.75 * (1 - cfg.targetRatio)));
-		this.cameraControls.fitToSphere(sphere, true);
+		this.cameraControls.fitToSphere(this.svgGroup, true);
 	}
 	resetView() {
 		this.cameraControls.reset(true);
