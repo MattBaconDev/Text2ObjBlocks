@@ -214,7 +214,7 @@ class App {
 			shifted = 0;
 			letters.forEach((letter, i) => {
 				if (i === 0) return;
-				let shift = cfg.letterSpacing === 'auto' ? getObjSize(letter).x/20 : cfg.letterSpacing;
+				let shift = cfg.letterSpacing === 'auto' ? getObjSize(letter).x / 20 : cfg.letterSpacing;
 				if (!cfg.linoMode) shift += cfg.plateXPadding;
 				letter.translateX(shifted + shift);
 				shifted += shift;
@@ -279,7 +279,7 @@ class App {
 					const plateGeo = new THREE.BoxGeometry(size.x + normPadding, blockHeight, cfg.plateDepth);
 					const plateMesh = new THREE.Mesh(plateGeo, this.plateMat.clone());
 					const meshSize = getObjSize(plateMesh);
-					plateMesh.position.x = letterCenter.x + (normPadding / 2) - normPadLeft - (cfg.plateXPadding/2);
+					plateMesh.position.x = letterCenter.x + (normPadding / 2) - normPadLeft - (cfg.plateXPadding / 2);
 					plateMesh.position.z = (-meshSize.z / 2) + cfg.plateOverlap;
 					plateMesh.updateMatrix();
 
