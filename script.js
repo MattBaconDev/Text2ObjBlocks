@@ -65,6 +65,12 @@ const elements = {
 	fontSizeInput: getElById('font-size'),
 	fullDepth: getElById('full-depth'),
 	mirrorModeInput: getElById('mirror-mode'),
+	lineSpacingInput: getElById('line-spacing'),
+	lineSpacingAuto: getElById('line-spacing-auto'),
+	letterSpacingInput: getElById('letter-spacing'),
+	letterSpacingAuto: getElById('letter-spacing-auto'),
+	plateXPaddingInput: getElById('plate-x-padding'),
+	plateYPaddingInput: getElById('plate-y-padding'),
 };
 
 class App {
@@ -204,7 +210,7 @@ class App {
 
 		const blockHeight = tallestLetter + cfg.plateYPadding;
 
-		const lineHeight = cfg.lineSpacing === 'auto' ? tallestLetter * 1.15 : (blockHeight + cfg.lineSpacing);
+		const lineHeight = cfg.lineSpacing === 'auto' ? blockHeight * 1.15 : (blockHeight + cfg.lineSpacing);
 
 		const svgGroupBox = new THREE.Box3().setFromObject(this.svgGroup);
 		const svgGroupCenter = new THREE.Vector3();
@@ -219,7 +225,8 @@ class App {
 			shifted = 0;
 			letters.forEach((letter, i) => {
 				if (i === 0) return;
-				const shift = cfg.letterSpacing === 'auto' ? getObjSize(letter).x/20 : cfg.letterSpacing;
+				let shift = cfg.letterSpacing === 'auto' ? getObjSize(letter).x/20 : cfg.letterSpacing;
+				if (!cfg.linoMode) shift += cfg.plateXPadding;
 				letter.translateX(shifted + shift);
 				shifted += shift;
 			});
@@ -239,7 +246,8 @@ class App {
 				const endLetterSize = allSizes[allSizes.length - 1];
 				const { normPadLeft } = getGlyphInfo(startLetter.name, startLetterSize);
 				const { normPadRight } = getGlyphInfo(endLetter.name, endLetterSize);
-				const normPadding = normPadLeft + normPadRight;
+				let normPadding = normPadLeft + normPadRight;
+				normPadding += cfg.plateXPadding;
 				const plateGeo = new THREE.BoxGeometry(lineSize.x + normPadding, blockHeight, cfg.plateDepth);
 				const plateMesh = new THREE.Mesh(plateGeo, this.plateMat.clone());
 				const meshSize = getObjSize(plateMesh);
@@ -278,11 +286,12 @@ class App {
 					const letterCenter = getObjCenter(letter);
 					const i = allLetters.indexOf(letter);
 					const size = allSizes[i];
-					const { normPadLeft, normPadding } = getGlyphInfo(letter.name, size);
+					let { normPadLeft, normPadding } = getGlyphInfo(letter.name, size);
+					normPadding += cfg.plateXPadding;
 					const plateGeo = new THREE.BoxGeometry(size.x + normPadding, blockHeight, cfg.plateDepth);
 					const plateMesh = new THREE.Mesh(plateGeo, this.plateMat.clone());
 					const meshSize = getObjSize(plateMesh);
-					plateMesh.position.x = letterCenter.x + (normPadding / 2) - normPadLeft;
+					plateMesh.position.x = letterCenter.x + (normPadding / 2) - normPadLeft - (cfg.plateXPadding/2);
 					plateMesh.position.z = (-meshSize.z / 2) + cfg.plateOverlap;
 					plateMesh.updateMatrix();
 
