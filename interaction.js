@@ -79,7 +79,7 @@ export default class Interaction {
 				mesh = this.app.meshes.find(m => getBox(m).containsPoint(point));
 			}
 		}
-		if (!mesh ||mesh.userData.type !== 'char') return null;
+		if (!mesh || mesh.userData.type !== 'char') return null;
 		return mesh;
 	}
 	onKeyDown(ev) {
