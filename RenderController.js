@@ -23,8 +23,8 @@ export class RenderControl {
 	}
 	updateCfg(value) {
 		value = typeof value === 'undefined' ? this.options.getter(this.inputEl) : value;
-		value = this.type === 'text' || value === 'auto' || typeof value === 'boolean' ? value : parseFloat(value);
-		if (isNaN(value)) {
+		value = this.type === 'number' ? parseFloat(value) : value;
+		if (this.type === 'number' && isNaN(value)) {
 			value = this.defaultValue;
 			this.inputEl.value = this.initialInputValue;
 		}
@@ -52,11 +52,13 @@ export class RenderControl {
 		const input = document.createElement('input');
 		input.id = id;
 		input.type = this.type;
+		if (this.type === 'radio') input.type = 'hidden';
 		if (this.type === 'number') {
 			if (typeof this.options.min === 'number') input.min = this.options.min;
 			if (typeof this.options.max === 'number') input.max = this.options.max;
 			if (typeof this.options.step === 'number') input.step = this.options.step;
 		}
+		input.name = this.name;
 		input.value = this.initialInputValue;
 		input.addEventListener('input', () => this.updateCfg());
 		input.addEventListener('keydown', (e) => {
@@ -81,6 +83,25 @@ export class RenderControl {
 		control.appendChild(input);
 		this.container = control;
 		this.inputEl = input;
+		if (this.type === 'radio') {
+			this.options.values.forEach(value => {
+				const label = document.createElement('label');
+				label.textContent = value.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase());
+				const option = document.createElement('input');
+				option.type = 'radio';
+				option.name = this.name + '_option';
+				option.value = value;
+				option.checked = value === this.defaultValue;
+				option.addEventListener('change', () => {
+					if (option.checked) {
+						this.inputEl.value = value;
+						this.updateCfg();
+					}
+				});
+				label.append(option);
+				control.appendChild(label);
+			});
+		}
 		if (this.options.postUpdate) this.options.postUpdate(this.app.cfg[this.name]);
 		return control;
 	}
