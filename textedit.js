@@ -8,7 +8,7 @@ class TextCursor {
 	lineCharIdx = -1;
 	visible = true;
 	size = null;
-	placement = 'after';
+	hook = { lineCharIdx: -1, lineIdx: -1, placement: null, letterMesh: null };
 	constructor(app, events) {
 		this.app = app;
 		this.events = events.childScope('cursor');
@@ -39,26 +39,35 @@ class TextCursor {
 		const prevPos = this.obj.position.clone();
 		const line = this.app.lines[this.lineIdx];
 		let hookIdx = this.lineCharIdx;
-		let hookType = 'before';
+		let placement = 'before';
 		if (hookIdx === line.length) {
 			hookIdx -= 1;
-			hookType = 'after';
+			placement = 'after';
 		}
+		const hook = {
+			lineIdx: this.lineIdx,
+			lineCharIdx: hookIdx,
+			placement,
+			letterMesh: null
+		};
 		const letterMesh = this.app.meshes.find(m => m.userData.type === 'char' && m.userData.lineIdx === this.lineIdx && m.userData.lineCharIdx === hookIdx);
+		hook.letterMesh = letterMesh;
 		if (!letterMesh) return;
 		const usrData = letterMesh.userData;
 		const letterCenter = getObjCenter(letterMesh);
 		const letterSize = getObjSize(letterMesh);
 		this.lineIdx = usrData.lineIdx;
 		this.lineCharIdx = usrData.lineCharIdx;
-		if (hookType === 'after') {
+		if (placement === 'after') {
 			this.lineCharIdx += 1;
 		}
+		this.hook = hook;
 		const lineCenter = -(this.app.blockHeight/2) + (this.lineIdx * this.app.lineHeight * -1) + (getObjSize(this.app.svgGroup).y/2);
-		const xShift = ((letterSize.x/2) + (this.size.x/3)) * (hookType === 'after' ? 1 : -1);
+		const xShift = ((letterSize.x/2) + (this.size.x/3)) * (placement === 'after' ? 1 : -1);
 		this.obj.position.x = letterCenter.x + xShift;
 		this.obj.position.y = lineCenter;
 		if (prevPos.distanceTo(this.obj.position) > 0.01) {
+			this.events.trigger('move');
 			this.resetBlink();
 			return true;
 		}
@@ -125,6 +134,66 @@ class TextCursor {
 		this.toggle(true);
 		clock.start();
 		this.app.needsRedraw = true;
+	}
+	syncWith(element) {
+		const newLineRex = /\r|\n/;
+		let justMoved = false;
+		let moveTimeout = null;
+		const moved = () => {
+			justMoved = true;
+			clearTimeout(moveTimeout);
+			moveTimeout = setTimeout(() => justMoved = false, 10);
+		}
+		const setCursorFromInput = () => {
+			if (this.lineIdx === -1) return;
+			if (justMoved) return;
+			element.onfocus = null;
+			moved();
+			const caretPos = element.selectionEnd;
+			const nextChar = element.value[caretPos];
+			const atEnd = typeof nextChar === 'undefined';
+			if (atEnd) return this.toEnd(true);
+			const beforeText = element.value.slice(0, caretPos);
+			const cleanedBeforeText = beforeText.replace(/(\r?\n)+/g, '');
+			const cleanPos = cleanedBeforeText.length;
+			const prevChar = this.app.meshes.slice().reverse().find(m => m.userData.type === 'char' && m.userData.charIdx < cleanPos);
+			if (newLineRex.test(nextChar)) {
+				this.forChar(prevChar);
+				this.moveRight();
+				return;
+			}
+			const charAtPos = this.app.meshes.find(m => m.userData.type === 'char' && m.userData.charIdx === cleanPos);
+			if (!charAtPos) return;
+			this.forChar(charAtPos);
+		}
+		element.addEventListener('input', () => {
+			setTimeout(setCursorFromInput, 20);
+		});
+		element.addEventListener('selectionchange', setCursorFromInput);
+		this.events.on('move', () => {
+			if (this.lineIdx === -1) return;
+			if (justMoved) return;
+			if (document.activeElement === element) return;
+			moved();
+			const { letterMesh, placement } = this.hook;
+			let charIdx = letterMesh.userData.charIdx;
+			if (placement === 'after') charIdx += 1;
+			for (let i = 0; i < element.value.length; i++) {
+				if (i === charIdx) break;
+				const letter = element.value[i];
+				if (letter === '\r' || letter === '\n') {
+					charIdx++;
+				}
+			}
+			if (element.selectionEnd !== charIdx) {
+				const setInputSelectionRange = () => {
+					element.setSelectionRange(charIdx, charIdx, "forward");
+					element.selectionStart = element.selectionEnd = charIdx;
+				};
+				element.onfocus = setInputSelectionRange;
+				setTimeout(setInputSelectionRange, 1);
+			}
+		});
 	}
 }
 
