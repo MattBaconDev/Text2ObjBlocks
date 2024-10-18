@@ -140,11 +140,14 @@ class App {
 			this.#_render();
 		}
 		this.needsRedraw = true;
-		const text = elements.textInput.value.trim();
+		const originalTextValue = elements.textInput.value;
+		const lastChar = originalTextValue[originalTextValue.length - 1];
+		const text = originalTextValue.trim();
 		const lines = text.split(/(\r?\n)+/).map(line => line.trim()).filter(line => !!line);
-		this.text = text;
+		this.text = lines.join('\n');
 		this.lines = lines;
-		this.chars = lines.flatMap(line => line.replace(/\s+/g, '').split(''));
+		this.chars = lines.flatMap(line => line.split(''));
+		elements.textInput.value = ['\n', ' '].includes(lastChar) ? this.text + lastChar : this.text;
 
 		previewSVG(lines, elements.svg);
 
@@ -158,7 +161,7 @@ class App {
 		let minLetterY = 0;
 		let charIdx = 0;
 		lines.forEach((line, lineIdx) => {
-			const svgData = buildSVGData(line, this.font, elements.svg);
+			const svgData = buildSVGData(line.replace(/\s/g, '_'), this.font, elements.svg);
 			const lineLetters = [];
 			const lineGroup = new THREE.Group();
 			lineGroup.name = 'line_' + lineIdx;
@@ -182,6 +185,9 @@ class App {
 				letterMesh.userData.type = 'char';
 				letterMesh.userData.isStartOfLine = i === 0;
 				letterMesh.userData.isEndOfLine = i === line.length - 1;
+				if (line[i] === ' ') {
+					letterMesh.userData.isSpace = true;
+					letterMesh.material.visible = false;
 				const letterHeight = letterSize.y;
 				tallestLetter = Math.max(tallestLetter, letterHeight);
 				lineLetters.push(letterMesh);
@@ -273,7 +279,7 @@ class App {
 			});
 
 			for (const child of Array.from(lineGroups).flatMap(lg => lg.children)) {
-				if (this.chars.includes(child.name)) {
+				if (this.chars.includes(child.name.replace(/\-\d+$/, ''))) {
 					child.userData.originalScale = child.scale.clone();
 					child.userData.originalPosition = child.position.clone();
 				}
@@ -298,6 +304,7 @@ class App {
 					const subbedPlateMesh = nickMesh(plateMesh, meshSize);
 					subbedPlateMesh.userData.type = 'block';
 					subbedPlateMesh.name = 'block_' + letter.name;
+					subbedPlateMesh.material.visible = letter.material.visible;
 
 					const letterGroup = new THREE.Group();
 					letterGroup.name = 'letter_' + letter.name;
