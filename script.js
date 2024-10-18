@@ -46,8 +46,7 @@ cfg.defaultValue = `ABCDEFGHIJKLMN
 OPQRSTUVWXYZ
 abcdefghijklmn
 opqrstuvwxyz
-1234567890
-`;
+1234567890`;
 
 function getElById(id) {
 	return document.getElementById(id);
