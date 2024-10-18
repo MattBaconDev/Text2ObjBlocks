@@ -47,9 +47,22 @@ body:has(#text-input:hover,#text-input:focus) #svg {
 	display: flex;
 	flex-direction: row;
 	align-items: center;
+	justify-content: center;
 	gap: 10px;
 	color: #FFF;
 }
+	#edit-mode-control label {
+		display: flex;
+		flex-direction: row;
+		align-items: center;
+		cursor: pointer;
+		gap: 5px;
+		margin: 0 5px;
+	}
+	#edit-mode-control input {
+		margin-top: 0;
+	}
+
 #text-controls {
 	position: absolute;
 	top: 15px;
@@ -58,11 +71,12 @@ body:has(#text-input:hover,#text-input:focus) #svg {
 	z-index: 3;
 }
 	#text-input {
+		margin-top: 5px;
 		background: rgba(0,0,0,0.2);
 		color: #FFF;
 		padding: 5px 10px;
 		border: none;
-		width: 500px;
+		width: 400px;
 		max-width: 40vw;
 		font-size: 1.2em;
 		border-bottom: 1px solid #CCC;
