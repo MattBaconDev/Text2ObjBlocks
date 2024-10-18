@@ -188,6 +188,8 @@ class App {
 				if (line[i] === ' ') {
 					letterMesh.userData.isSpace = true;
 					letterMesh.material.visible = false;
+					letterMesh.userData.excludeFromExport = true;
+				}
 				const letterHeight = letterSize.y;
 				tallestLetter = Math.max(tallestLetter, letterHeight);
 				lineLetters.push(letterMesh);
@@ -305,6 +307,7 @@ class App {
 					subbedPlateMesh.userData.type = 'block';
 					subbedPlateMesh.name = 'block_' + letter.name;
 					subbedPlateMesh.material.visible = letter.material.visible;
+					if (letter.userData.excludeFromExport) subbedPlateMesh.userData.excludeFromExport = true;
 
 					const letterGroup = new THREE.Group();
 					letterGroup.name = 'letter_' + letter.name;
