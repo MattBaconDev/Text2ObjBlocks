@@ -298,9 +298,8 @@ export default class TextEdit {
 	onKeyDown(ev) {
 		if (this.app.cfg.editMode !== 'text') return;
 		if (this.cursor.lineIdx === -1) return;
-		if (typeof ev.key === 'string' && ev.key.length === 1) {
-			this.insert(ev.key);
-		}
+		if (typeof ev.key !== 'string') return;
+		if (ev.key.length === 1) this.insert(ev.key);
 		if (ev.key === 'Backspace') this.backspace();
 		if (ev.key === 'Delete') this.delete();
 		if (ev.key === 'ArrowLeft') this.cursor.moveLeft();
