@@ -12,7 +12,7 @@ class TextCursor {
 	constructor(app, events) {
 		this.app = app;
 		this.events = events.childScope('cursor');
-		const geo = new THREE.BoxGeometry(app.cfg.fontSize/4, app.cfg.fontSize, 1);
+		const geo = new THREE.BoxGeometry(app.cfg.fontSize / 4, app.cfg.fontSize, 1);
 		const mat = new THREE.MeshBasicMaterial({ color: 0x66CCFF });
 		this.obj = new THREE.Mesh(geo, mat);
 	}
@@ -24,7 +24,7 @@ class TextCursor {
 		this.obj.scale.x = width;
 		this.obj.scale.y = height;
 		this.obj.scale.z = depth;
-		this.obj.position.z = depth/2;
+		this.obj.position.z = depth / 2;
 		this.size = getObjSize(this.obj);
 	}
 	setLinePos(lineIdx, lineCharIdx) {
@@ -62,8 +62,8 @@ class TextCursor {
 			this.lineCharIdx += 1;
 		}
 		this.hook = hook;
-		const lineCenter = -(this.app.blockHeight/2) + (this.lineIdx * this.app.lineHeight * -1) + (getObjSize(this.app.svgGroup).y/2);
-		const xShift = ((letterSize.x/2) + (this.size.x/3)) * (placement === 'after' ? 1 : -1);
+		const lineCenter = -(this.app.blockHeight / 2) + (this.lineIdx * this.app.lineHeight * -1) + (getObjSize(this.app.svgGroup).y / 2);
+		const xShift = ((letterSize.x / 2) + (this.size.x / 3)) * (placement === 'after' ? 1 : -1);
 		this.obj.position.x = letterCenter.x + xShift;
 		this.obj.position.y = lineCenter;
 		if (prevPos.distanceTo(this.obj.position) > 0.01) {
@@ -230,7 +230,7 @@ export default class TextEdit {
 	}
 	// Called every animation frame - returns whether app needs to redraw
 	renderCheck() {
-		const [ cursor, app ] = [ this.cursor, this.app ];
+		const [cursor, app] = [this.cursor, this.app];
 		if (cursor.size === null && app.meshes.length) {
 			const depth = app.cfg.letterDepth + app.cfg.plateDepth;
 			cursor.setSize(app.meshes[0].scale.x, app.meshes[0].scale.y, depth);
@@ -254,7 +254,7 @@ export default class TextEdit {
 		this.app.render();
 	}
 	insert(char) {
-		const [ appLines, cursor ] = [ this.app.lines, this.cursor ];
+		const [appLines, cursor] = [this.app.lines, this.cursor];
 		const lineArr = appLines[cursor.lineIdx].split('');
 		lineArr.splice(cursor.lineCharIdx, 0, char);
 		appLines[cursor.lineIdx] = lineArr.join('');
@@ -262,7 +262,7 @@ export default class TextEdit {
 		cursor.moveRight();
 	}
 	backspace() {
-		const [ appLines, cursor ] = [ this.app.lines, this.cursor ];
+		const [appLines, cursor] = [this.app.lines, this.cursor];
 		if (cursor.lineCharIdx === 0) {
 			if (cursor.lineIdx === 0) return;
 			const prevLineLen = appLines[cursor.lineIdx - 1].length;
@@ -280,7 +280,7 @@ export default class TextEdit {
 		}
 	}
 	delete() {
-		const [ appLines, cursor ] = [ this.app.lines, this.cursor ];
+		const [appLines, cursor] = [this.app.lines, this.cursor];
 		const line = appLines[cursor.lineIdx];
 		if (cursor.lineCharIdx === line.length) {
 			if (cursor.lineIdx === appLines.length - 1) return;
@@ -311,7 +311,7 @@ export default class TextEdit {
 		if (ev.key === 'Enter') this.newline();
 	}
 	newline() {
-		const [ appLines, cursor ] = [ this.app.lines, this.cursor ];
+		const [appLines, cursor] = [this.app.lines, this.cursor];
 		const line = appLines[cursor.lineIdx];
 		if (cursor.lineCharIdx === 0) return cursor.moveDown();
 		if (cursor.lineCharIdx === line.length && cursor.lineIdx < appLines.length - 1) return cursor.moveRight();
