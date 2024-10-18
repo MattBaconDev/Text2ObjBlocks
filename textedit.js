@@ -166,9 +166,6 @@ export default class TextEdit {
 			const depth = app.cfg.letterDepth + app.cfg.plateDepth;
 			cursor.setSize(app.meshes[0].scale.x, app.meshes[0].scale.y, depth);
 		}
-		else if (cursor.size !== null) {
-			cursor.checkPosition();
-		}
 		if (app.cfg.editMode !== 'text') {
 			const wasVisible = cursor.visible;
 			cursor.toggle(false);
