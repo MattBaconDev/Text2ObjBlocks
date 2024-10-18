@@ -258,8 +258,8 @@ export default class TextEdit {
 		const lineArr = appLines[cursor.lineIdx].split('');
 		lineArr.splice(cursor.lineCharIdx, 0, char);
 		appLines[cursor.lineIdx] = lineArr.join('');
+		cursor.lineCharIdx += char.length;
 		this.#_updateTextFromLines();
-		cursor.moveRight();
 	}
 	backspace() {
 		const [appLines, cursor] = [this.app.lines, this.cursor];
