@@ -25,7 +25,7 @@ class STLExporter {
 		let triangles = 0;
 
 		scene.traverse( function ( object ) {
-
+			if (object.userData?.excludeFromExport === true) return;
 			if ( object.isMesh ) {
 
 				const geometry = object.geometry;
