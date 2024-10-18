@@ -295,11 +295,17 @@ export default class TextEdit {
 			this.#_updateTextFromLines();
 		}
 	}
+	handlePaste() {
+		navigator.clipboard.readText().then(text => {
+			this.insert(text);
+		});
+	}
 	onKeyDown(ev) {
 		if (this.app.cfg.editMode !== 'text') return;
 		if (this.cursor.lineIdx === -1) return;
 		if (typeof ev.key !== 'string') return;
-		if (ev.key.length === 1) this.insert(ev.key);
+		if (ev.ctrlKey && ev.key === 'v') this.handlePaste();
+		if (!ev.ctrlKey && ev.key.length === 1) this.insert(ev.key);
 		if (ev.key === 'Backspace') this.backspace();
 		if (ev.key === 'Delete') this.delete();
 		if (ev.key === 'ArrowLeft') this.cursor.moveLeft();
