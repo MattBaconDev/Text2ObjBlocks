@@ -43,6 +43,13 @@ body:has(#text-input:hover,#text-input:focus) #svg {
 	background: repeating-linear-gradient(45deg, #6786 0px, #6786 1px, #035C 1px, #035C 10px);
 	pointer-events: none;
 }
+#edit-mode-control {
+	display: flex;
+	flex-direction: row;
+	align-items: center;
+	gap: 10px;
+	color: #FFF;
+}
 #text-controls {
 	position: absolute;
 	top: 15px;
@@ -61,6 +68,10 @@ body:has(#text-input:hover,#text-input:focus) #svg {
 		border-bottom: 1px solid #CCC;
 		overflow: hidden;
 		font-family: 'Roboto', Arial, sans-serif;
+		display: none;
+	}
+	#edit-mode-control.show-text-input + #text-input {
+		display: block;
 	}
 #export-button {
 	cursor: pointer;

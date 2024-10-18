@@ -38,9 +38,45 @@ export default class Interaction {
 		const char = this.#_charUnderMouse(true);
 		this.mouseDownChar = char;
 	}
+	checkEndOfLineClick() {
+		const { object, point } = this.#_meshUnderMouse();
+		if (!object || !point) return;
+		if (object.type !== 'GridHelper') return;
+		const zOffset = this.app.cfg.plateDepth/2;
+		const testPoint = point.clone().add(new THREE.Vector3(0, 0, zOffset));
+		const endsOfLines = this.app.meshes.filter(m => m.userData.type === 'char' && m.userData.isEndOfLine);
+		for (const endMesh of endsOfLines) {
+			const center = getCenter(endMesh);
+			const size = getObjSize(endMesh);
+			const endOfLine = center.add(new THREE.Vector3(size.x, 0, -zOffset));
+			const yDiff = Math.abs(testPoint.y - endOfLine.y);
+			const xDiff = testPoint.x - endOfLine.x;
+			const ptDist = testPoint.distanceTo(endOfLine);
+			const maxDist = Math.max(size.x, size.y);
+			if (ptDist < maxDist || (yDiff < (this.app.blockHeight/2) && xDiff > 0)) {
+				this.app.textEdit.cursor.toEndOfLine(endMesh.userData.lineIdx);
+				return true;
+			}
+		}
+		const startsOfLines = this.app.meshes.filter(m => m.userData.type === 'char' && m.userData.isStartOfLine);
+		for (const startMesh of startsOfLines) {
+			const center = getCenter(startMesh);
+			const size = getObjSize(startMesh);
+			const startOfLine = center.sub(new THREE.Vector3(size.x, 0, zOffset));
+			const yDiff = Math.abs(testPoint.y - startOfLine.y);
+			const xDiff = testPoint.x - startOfLine.x;
+			const ptDist = testPoint.distanceTo(startOfLine);
+			const maxDist = Math.max(size.x, size.y);
+			if (ptDist < maxDist || (yDiff < (this.app.blockHeight/2) && xDiff < 0)) {
+				this.app.textEdit.cursor.toStartOfLine(startMesh.userData.lineIdx);
+				return true;
+			}
+		}
+	}
 	onClick(ev) {
 		this.#_updateMouse(ev);
 		const char = this.#_charUnderMouse(true);
+		if (!char && this.app.cfg.editMode === 'text') this.checkEndOfLineClick();
 		if (char !== this.selectedChar && char === this.mouseDownChar) {
 			const prevSelection = this.selectedChar;
 			this.selectedChar = char;
@@ -49,6 +85,7 @@ export default class Interaction {
 			}
 			if (!char) return;
 			this.applySelection(char, true);
+			this.app.textEdit.cursor.forChar(char);
 		}
 	}
 	applySelection(char, force = null) {
@@ -56,6 +93,7 @@ export default class Interaction {
 		if (selected && char !== this.selectedChar && char.name === this.selectedChar.name) {
 			this.selectedChar = char;
 		}
+		if (this.app.cfg.editMode !== 'mesh') return;
 		char.material.color.set(selected ? this.app.cfg.selectedColour : this.app.cfg.defaultColour);
 		const block = this.#_getCharBlock(char);
 		if (block) {
@@ -89,6 +127,7 @@ export default class Interaction {
 		return mesh;
 	}
 	onKeyDown(ev) {
+		if (this.app.cfg.editMode !== 'mesh') return;
 		if (ev.key === 'Backspace') {
 			this.resetChanges(this.selectedChar);
 		}
@@ -138,4 +177,12 @@ function getBox(obj, expandBy = 0.5) {
 	const box = new THREE.Box3().setFromObject(obj);
 	box.expandByScalar(expandBy);
 	return box;
+}
+function getCenter(obj) {
+	const box = getBox(obj);
+	return box.getCenter(new THREE.Vector3());
+}
+function getObjSize(obj) {
+	const box = getBox(obj);
+	return box.getSize(new THREE.Vector3());
 }
