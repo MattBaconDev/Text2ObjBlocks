@@ -197,6 +197,7 @@ body:has(#text-input:hover,#text-input:focus) #svg {
 		max-height: 1.5em;
 		overflow: hidden;
 	}
+	.control-group:focus-within,
 	.control-group.expanded {
 		max-height: 10em;
 	}
@@ -212,11 +213,12 @@ body:has(#text-input:hover,#text-input:focus) #svg {
 		display: inline-block;
 	}
 	.control-group .controls {
-		max-height: 1.5em;
+		max-height: 0.1em;
 	}
 	.control-group.expanded .label::before {
 		transform: rotate(90deg);
 	}
+	.control-group:focus-within .controls,
 	.control-group.expanded .controls {
 		max-height: 10em;
 	}
