@@ -408,16 +408,15 @@ elements.editModeControl.addEventListener('change', ev => {
 		app.interaction.applySelection(app.interaction.selectedChar, false);
 	}
 	app.cfg.editMode = ev.target.value;
-	if (app.cfg.editMode !== 'text') {
+	if (app.cfg.editMode !== 'textarea') {
 		elements.editModeControl.classList.remove('show-text-input');
+	}
+	else {
+		elements.editModeControl.classList.add('show-text-input');
+		app.cfg.editMode = 'text';
 	}
 	app.canvas.focus();
 	app.needsRedraw = true;
-});
-elements.editModeControl.addEventListener('dblclick', ev => {
-	if (ev.target.value === 'text' || ev.target.textContent === 'Text') {
-		elements.editModeControl.classList.add('show-text-input');
-	}
 });
 app.textEdit.cursor.syncWith(elements.textInput);
 
