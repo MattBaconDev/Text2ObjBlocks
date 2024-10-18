@@ -420,6 +420,7 @@ elements.editModeControl.addEventListener('dblclick', ev => {
 		elements.editModeControl.classList.add('show-text-input');
 	}
 });
+app.textEdit.cursor.syncWith(elements.textInput);
 
 // helpers
 function buildSVGData(text, font) {
