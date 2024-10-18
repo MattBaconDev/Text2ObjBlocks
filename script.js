@@ -10,6 +10,7 @@ import CameraControls from './libs/camera-controls.module.js';
 import { TextGeometry } from 'three/addons/geometries/TextGeometry.js';
 import { FontLoader } from 'three/addons/loaders/FontLoader.js';
 import TextEdit from './textedit.js';
+import { Events } from './events.js';
 
 CameraControls.install({ THREE });
 const clock = new THREE.Clock();
@@ -87,7 +88,7 @@ class App {
 	savedOrbitState = false;
 	plainFont = null;
 	needsRedraw = true;
-	textEdit = new TextEdit(this);
+	events = Events.createScope('app');
 	constructor(container) {
 		if (!container) container = document.body;
 		this.camera = new THREE.PerspectiveCamera(25, window.innerWidth / window.innerHeight, 0.1, 5000);
@@ -104,6 +105,7 @@ class App {
 		this.scene.background = new THREE.Color(0x053555);
 		this.cameraControls = new CameraControls(this.camera, this.renderer.domElement);
 		elements.textInput.value = cfg.defaultValue;
+		this.textEdit = new TextEdit(this);
 		document.querySelector(`input[name="edit-mode"][value="${cfg.editMode}"]`).checked = true;
 	}
 	emptyScene() {

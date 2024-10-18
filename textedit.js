@@ -1,4 +1,5 @@
 import * as THREE from 'three';
+import { Events } from './events.js';
 
 const clock = new THREE.Clock();
 
@@ -8,8 +9,9 @@ class TextCursor {
 	visible = true;
 	size = null;
 	placement = 'after';
-	constructor(app) {
+	constructor(app, events) {
 		this.app = app;
+		this.events = events.childScope('cursor');
 		const geo = new THREE.BoxGeometry(app.cfg.fontSize/4, app.cfg.fontSize, 1);
 		const mat = new THREE.MeshBasicMaterial({ color: 0x66CCFF });
 		this.obj = new THREE.Mesh(geo, mat);
@@ -131,7 +133,8 @@ export default class TextEdit {
 	cursorHideTime = 0.2;
 	constructor(app) {
 		this.app = app;
-		this.cursor = new TextCursor(app);
+		this.events = Events.getScope('app').childScope('textedit');
+		this.cursor = new TextCursor(app, this.events);
 	}
 	init() {
 		this.app.scene.add(this.cursor.obj);
