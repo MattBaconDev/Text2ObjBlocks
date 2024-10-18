@@ -9,6 +9,7 @@ import { CSG } from './libs/CSGMesh.js';
 import CameraControls from './libs/camera-controls.module.js';
 import { TextGeometry } from 'three/addons/geometries/TextGeometry.js';
 import { FontLoader } from 'three/addons/loaders/FontLoader.js';
+import TextEdit from './textedit.js';
 
 CameraControls.install({ THREE });
 const clock = new THREE.Clock();
@@ -18,6 +19,7 @@ await import('opentype');
 const cfg = {
 	defaultFontPath: './fonts/Roboto-Regular.ttf',
 	defaultValue: 'ABC',
+	editMode: 'text',
 	mirror: false,
 	fontSize: 15,
 	plateOverlap: 0.1,
@@ -59,6 +61,7 @@ const elements = {
 	exportButton: getElById('export-button'),
 	resetViewBtn: getElById('reset-view-btn'),
 	zoomFitBtn: getElById('zoom-fit-btn'),
+	editModeControl: getElById('edit-mode-control'),
 };
 
 class App {
@@ -70,6 +73,8 @@ class App {
 	text = '';
 	lines = [];
 	meshes = [];
+	blockHeight = 0;
+	lineHeight = 0;
 	scene = new THREE.Scene();
 	svgGroup = new THREE.Group();
 	initialised = false;
@@ -82,6 +87,7 @@ class App {
 	savedOrbitState = false;
 	plainFont = null;
 	needsRedraw = true;
+	textEdit = new TextEdit(this);
 	constructor(container) {
 		if (!container) container = document.body;
 		this.camera = new THREE.PerspectiveCamera(25, window.innerWidth / window.innerHeight, 0.1, 5000);
@@ -98,6 +104,7 @@ class App {
 		this.scene.background = new THREE.Color(0x053555);
 		this.cameraControls = new CameraControls(this.camera, this.renderer.domElement);
 		elements.textInput.value = cfg.defaultValue;
+		document.querySelector(`input[name="edit-mode"][value="${cfg.editMode}"]`).checked = true;
 	}
 	emptyScene() {
 		emptyObject(this.svgGroup);
@@ -135,7 +142,7 @@ class App {
 		const lines = text.split(/(\r?\n)+/).map(line => line.trim()).filter(line => !!line);
 		this.text = text;
 		this.lines = lines;
-		const chars = lines.flatMap(line => line.replace(/\s+/g, '').split(''));
+		this.chars = lines.flatMap(line => line.replace(/\s+/g, '').split(''));
 
 		previewSVG(lines, elements.svg);
 
@@ -166,11 +173,13 @@ class App {
 				const bufferGeo = BufferGeometryUtils.mergeGeometries(letterGeos, false);
 				const letterMesh = new THREE.Mesh(bufferGeo, this.letterMat.clone());
 				const letterSize = getObjSize(letterMesh);
-				letterMesh.name = getMeshName(chars, charIdx);
+				letterMesh.name = getMeshName(this.chars, charIdx);
 				letterMesh.userData.lineIdx = lineIdx;
 				letterMesh.userData.lineCharIdx = i;
 				letterMesh.userData.charIdx = charIdx;
 				letterMesh.userData.type = 'char';
+				letterMesh.userData.isStartOfLine = i === 0;
+				letterMesh.userData.isEndOfLine = i === line.length - 1;
 				const letterHeight = letterSize.y;
 				tallestLetter = Math.max(tallestLetter, letterHeight);
 				lineLetters.push(letterMesh);
@@ -198,8 +207,9 @@ class App {
 		tallestLetter = maxLetterY - minLetterY;
 
 		const blockHeight = tallestLetter + cfg.plateYPadding;
-
 		const lineHeight = cfg.lineSpacing === 'auto' ? blockHeight * 1.15 : (blockHeight + cfg.lineSpacing);
+		this.blockHeight = blockHeight;
+		this.lineHeight = lineHeight;
 
 		const svgGroupBox = new THREE.Box3().setFromObject(this.svgGroup);
 		const svgGroupCenter = new THREE.Vector3();
@@ -261,7 +271,7 @@ class App {
 			});
 
 			for (const child of Array.from(lineGroups).flatMap(lg => lg.children)) {
-				if (chars.includes(child.name)) {
+				if (this.chars.includes(child.name)) {
 					child.userData.originalScale = child.scale.clone();
 					child.userData.originalPosition = child.position.clone();
 				}
@@ -325,6 +335,7 @@ class App {
 		this.svgGroup.updateMatrix();
 		this.scene.updateMatrix();
 		this.#_render();
+		this.textEdit.onRender();
 		this.initialise();
 	}
 	#_render() {
@@ -334,10 +345,12 @@ class App {
 	}
 	initialise() {
 		if (this.initialised) return;
+		this.textEdit.init();
 
 		const animate = () => {
 			const delta = clock.getDelta();
-			this.needsRedraw = this.needsRedraw || this.cameraControls.update(delta);
+			this.needsRedraw = this.cameraControls.update(delta) || this.needsRedraw;
+			this.needsRedraw = this.textEdit.renderCheck() || this.needsRedraw;
 			requestAnimationFrame(animate);
 			this.#_render();
 		};
@@ -379,6 +392,23 @@ app.render();
 
 elements.resetViewBtn.addEventListener('click', () => app.resetView());
 elements.zoomFitBtn.addEventListener('click', () => app.zoomToFit());
+elements.editModeControl.addEventListener('change', ev => {
+	if (ev.target.value === 'text' && app.interaction.selectedChar) {
+		app.interaction.applySelection(app.interaction.selectedChar, false);
+	}
+	app.cfg.editMode = ev.target.value;
+	if (app.cfg.editMode !== 'text') {
+		elements.editModeControl.classList.remove('show-text-input');
+	}
+	app.canvas.focus();
+	app.needsRedraw = true;
+});
+elements.editModeControl.addEventListener('dblclick', ev => {
+	if (ev.target.value === 'text' || ev.target.textContent === 'Text') {
+		elements.editModeControl.classList.add('show-text-input');
+	}
+});
+
 // helpers
 function buildSVGData(text, font) {
 	text = text.replace(/\s/g, ' ').trim();
