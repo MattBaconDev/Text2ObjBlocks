@@ -141,8 +141,8 @@ export default class RenderController {
 		const fontControlsEl = document.getElementById('font-controls');
 		const fullDepth = document.getElementById('full-depth');
 		const fontSize = new RenderControl(app, 'fontSize', 'number', { max: 100, step: 1 });
-		const letterDepth = new RenderControl(app, 'letterDepth', 'number', { label: 'Letter', max: 10, postUpdate: (value) => fullDepth.textContent = value + app.cfg.blockDepth });
-		const blockDepth = new RenderControl(app, 'blockDepth', 'number', { label: 'Block', max: 30, postUpdate: (value) => fullDepth.textContent = app.cfg.letterDepth + value });
+		const letterDepth = new RenderControl(app, 'depth.letter', 'number', { label: 'Letter', max: 10, postUpdate: (value) => fullDepth.textContent = value + app.cfg.depth.block });
+		const blockDepth = new RenderControl(app, 'depth.block', 'number', { label: 'Block', max: 30, postUpdate: (value) => fullDepth.textContent = app.cfg.depth.letter + value });
 		const linoMode = new RenderControl(app, 'linoMode', 'checkbox');
 		const mirrorMode = new RenderControl(app, 'mirror', 'checkbox');
 		const lineSpacing = new RenderControl(app, 'lineSpacing', 'number/auto', { label: 'Line', min: -5, max: 20, autoValue: 2.5 });

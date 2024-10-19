@@ -24,11 +24,13 @@ const cfg = {
 	editMode: 'text',
 	mirror: false,
 	fontSize: 15,
-	blockOverlap: 0.1,
 	letterSpacing: 'auto',
 	lineSpacing: 'auto',
-	letterDepth: 2,
-	blockDepth: 21.318,
+	depth: {
+		letter: 2,
+		block: 21.318,
+		overlap: 0.1,
+	},
 	blockXPadding: 'auto',
 	blockYPadding: 'auto',
 	linoMode: false,
@@ -181,7 +183,7 @@ class App {
 				const letterGeos = [];
 				shapes.forEach((shape, j) => {
 					const geometry = new THREE.ExtrudeGeometry(shape, {
-						depth: cfg.letterDepth + cfg.blockOverlap,
+						depth: cfg.depth.letter + cfg.depth.overlap,
 						bevelEnabled: false,
 					});
 					letterGeos.push(geometry);
@@ -273,12 +275,12 @@ class App {
 				const { normPadRight } = getGlyphInfo(endLetter.name, endLetterSize);
 				let normPadding = normPadLeft + normPadRight;
 				normPadding += blockXPadding;
-				const blockGeo = new THREE.BoxGeometry(lineSize.x + normPadding, blockHeight, cfg.blockDepth);
+				const blockGeo = new THREE.BoxGeometry(lineSize.x + normPadding, blockHeight, cfg.depth.block);
 				const blockMesh = new THREE.Mesh(blockGeo, this.blockMat.clone());
 				const meshSize = getSize(blockMesh);
 				blockMesh.position.x = lineCenter.x;
 				blockMesh.position.y -= allCenter.y;
-				blockMesh.position.z = (-meshSize.z / 2) + cfg.blockOverlap;
+				blockMesh.position.z = (-meshSize.z / 2) + cfg.depth.overlap;
 				blockMesh.updateMatrix();
 
 				const subbedBlockMesh = nickMesh(blockMesh, meshSize);
@@ -313,11 +315,11 @@ class App {
 					const size = allSizes[i];
 					let { normPadLeft, normPadding } = getGlyphInfo(letter.name, size);
 					normPadding += blockXPadding;
-					const blockGeo = new THREE.BoxGeometry(size.x + normPadding, blockHeight, cfg.blockDepth);
+					const blockGeo = new THREE.BoxGeometry(size.x + normPadding, blockHeight, cfg.depth.block);
 					const blockMesh = new THREE.Mesh(blockGeo, this.blockMat.clone());
 					const meshSize = getSize(blockMesh);
 					blockMesh.position.x = letterCenter.x + (normPadding / 2) - normPadLeft - (blockXPadding / 2);
-					blockMesh.position.z = (-meshSize.z / 2) + cfg.blockOverlap;
+					blockMesh.position.z = (-meshSize.z / 2) + cfg.depth.overlap;
 					blockMesh.updateMatrix();
 
 					const subbedBlockMesh = nickMesh(blockMesh, meshSize);
@@ -354,7 +356,7 @@ class App {
 		 */
 		if (cfg.mirror) this.svgGroup.scale.multiply(new THREE.Vector3(-1, 1, 1));
 		const groupCenter = getCenter(this.svgGroup);
-		this.svgGroup.position.z += cfg.blockDepth;
+		this.svgGroup.position.z += cfg.depth.block;
 		this.svgGroup.position.y -= groupCenter.y;
 		this.svgGroup.position.x -= groupCenter.x;
 
