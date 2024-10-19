@@ -142,6 +142,7 @@ export default class RenderController {
 		const fullDepth = document.getElementById('full-depth');
 		const fontSize = new RenderControl(app, 'fontSize', 'number', { max: 100, step: 1 });
 		const letterDepth = new RenderControl(app, 'depth.letter', 'number', { label: 'Letter', max: 10, postUpdate: (value) => fullDepth.textContent = value + app.cfg.depth.block });
+		const overlap = new RenderControl(app, 'depth.overlap', 'number', { label: 'Overlap', max: 10 });
 		const blockDepth = new RenderControl(app, 'depth.block', 'number', { label: 'Block', max: 30, postUpdate: (value) => fullDepth.textContent = app.cfg.depth.letter + value });
 		const linoMode = new RenderControl(app, 'linoMode', 'checkbox');
 		const mirrorMode = new RenderControl(app, 'mirror', 'checkbox');
@@ -149,7 +150,7 @@ export default class RenderController {
 		const letterSpacing = new RenderControl(app, 'letterSpacing', 'number/auto', { label: 'Letter', min: -5, max: 20, autoValue: 0.5 });
 		const blockXPadding = new RenderControl(app, 'blockXPadding', 'number/auto', { label: 'Block X', min: -5, max: 20, autoValue: 0 });
 		const blockYPadding = new RenderControl(app, 'blockYPadding', 'number/auto', { label: 'Block Y', min: -5, max: 20, autoValue: 0 });
-		const depthsGroup = controlGroup('Depths', letterDepth, blockDepth);
+		const depthsGroup = controlGroup('Depths', overlap, letterDepth, blockDepth);
 		const fullDepthGroup = fullDepth.closest('.control-group');
 		depthsGroup.append(fullDepthGroup.children[0]);
 		fullDepthGroup.remove();
