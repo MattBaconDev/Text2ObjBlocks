@@ -11,6 +11,7 @@ import { TextGeometry } from 'three/addons/geometries/TextGeometry.js';
 import { FontLoader } from 'three/addons/loaders/FontLoader.js';
 import TextEdit from './textedit.js';
 import { Events } from './events.js';
+import { getCenter, getSize } from './utils.js';
 
 CameraControls.install({ THREE });
 const clock = new THREE.Clock();
@@ -192,7 +193,7 @@ class App {
 				});
 				const bufferGeo = BufferGeometryUtils.mergeGeometries(letterGeos, false);
 				const letterMesh = new THREE.Mesh(bufferGeo, this.letterMat.clone());
-				const letterSize = getObjSize(letterMesh);
+				const letterSize = getSize(letterMesh);
 				letterMesh.name = getMeshName(this.chars, charIdx);
 				letterMesh.userData.lineIdx = lineIdx;
 				letterMesh.userData.lineCharIdx = i;
@@ -215,9 +216,9 @@ class App {
 			let maxY = 0;
 			let minY = 0;
 			lineLetters.forEach(letter => {
-				const size = getObjSize(letter);
+				const size = getSize(letter);
 				allSizes.push(size);
-				const letterCenter = getObjCenter(letter).y;
+				const letterCenter = getCenter(letter).y;
 				const letterHeight = size.y;
 				const topY = letterCenter + (letterHeight / 2);
 				const bottomY = letterCenter - (letterHeight / 2);
@@ -253,7 +254,7 @@ class App {
 			shifted = 0;
 			letters.forEach((letter, i) => {
 				if (i === 0) return;
-				let shift = cfg.letterSpacing === 'auto' ? getObjSize(letter).x / 20 : cfg.letterSpacing;
+				let shift = cfg.letterSpacing === 'auto' ? getSize(letter).x / 20 : cfg.letterSpacing;
 				if (!cfg.linoMode) shift += blockXPadding;
 				letter.translateX(shifted + shift);
 				shifted += shift;
@@ -263,11 +264,11 @@ class App {
 		/*
 		 * SECTION: Block creation
 		 */
-		const allCenter = getObjCenter(this.svgGroup);
+		const allCenter = getCenter(this.svgGroup);
 		if (cfg.linoMode) {
 			lineGroups.forEach((lineGroup, lgi) => {
-				const lineSize = getObjSize(lineGroup);
-				const lineCenter = getObjCenter(lineGroup);
+				const lineSize = getSize(lineGroup);
+				const lineCenter = getCenter(lineGroup);
 				const letters = lineGroup.children;
 				const startLetter = letters[0];
 				const endLetter = letters[letters.length - 1];
@@ -279,7 +280,7 @@ class App {
 				normPadding += blockXPadding;
 				const blockGeo = new THREE.BoxGeometry(lineSize.x + normPadding, blockHeight, cfg.blockDepth);
 				const blockMesh = new THREE.Mesh(blockGeo, this.blockMat.clone());
-				const meshSize = getObjSize(blockMesh);
+				const meshSize = getSize(blockMesh);
 				blockMesh.position.x = lineCenter.x;
 				blockMesh.position.y -= allCenter.y;
 				blockMesh.position.z = (-meshSize.z / 2) + cfg.blockOverlap;
@@ -312,14 +313,14 @@ class App {
 			lineGroups.forEach((lineGroup, lgi) => {
 				const letters = Array.from(lineGroup.children);
 				for (const letter of letters) {
-					const letterCenter = getObjCenter(letter);
+					const letterCenter = getCenter(letter);
 					const i = allLetters.indexOf(letter);
 					const size = allSizes[i];
 					let { normPadLeft, normPadding } = getGlyphInfo(letter.name, size);
 					normPadding += blockXPadding;
 					const blockGeo = new THREE.BoxGeometry(size.x + normPadding, blockHeight, cfg.blockDepth);
 					const blockMesh = new THREE.Mesh(blockGeo, this.blockMat.clone());
-					const meshSize = getObjSize(blockMesh);
+					const meshSize = getSize(blockMesh);
 					blockMesh.position.x = letterCenter.x + (normPadding / 2) - normPadLeft - (blockXPadding / 2);
 					blockMesh.position.z = (-meshSize.z / 2) + cfg.blockOverlap;
 					blockMesh.updateMatrix();
@@ -357,7 +358,7 @@ class App {
 		 * SECTION: Mirroring and centering
 		 */
 		if (cfg.mirror) this.svgGroup.scale.multiply(new THREE.Vector3(-1, 1, 1));
-		const groupCenter = getObjCenter(this.svgGroup);
+		const groupCenter = getCenter(this.svgGroup);
 		this.svgGroup.position.z += cfg.blockDepth;
 		this.svgGroup.position.y -= groupCenter.y;
 		this.svgGroup.position.x -= groupCenter.x;
@@ -515,21 +516,6 @@ function drawText(text, position, size = 8) {
 }
 function degreesToEuler(degrees) {
 	return degrees * Math.PI / 180;
-}
-function getObjSize(obj) {
-	const box = getObjBox(obj);
-	const size = new THREE.Vector3();
-	box.getSize(size);
-	return size;
-}
-function getObjCenter(obj) {
-	const box = getObjBox(obj);
-	const center = new THREE.Vector3();
-	box.getCenter(center);
-	return center;
-}
-function getObjBox(obj) {
-	return new THREE.Box3().setFromObject(obj);
 }
 function getGlyphInfo(char, size) {
 	const unicode = char.charCodeAt(0);

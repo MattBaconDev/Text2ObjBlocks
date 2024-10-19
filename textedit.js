@@ -1,5 +1,6 @@
 import * as THREE from 'three';
 import { Events } from './events.js';
+import { getCenter, getSize } from './utils.js';
 
 const clock = new THREE.Clock();
 
@@ -25,7 +26,7 @@ class TextCursor {
 		this.obj.scale.y = height;
 		this.obj.scale.z = depth;
 		this.obj.position.z = depth / 2;
-		this.size = getObjSize(this.obj);
+		this.size = getSize(this.obj);
 	}
 	setLinePos(lineIdx, lineCharIdx) {
 		this.lineIdx = lineIdx;
@@ -54,15 +55,15 @@ class TextCursor {
 		hook.letterMesh = letterMesh;
 		if (!letterMesh) return;
 		const usrData = letterMesh.userData;
-		const letterCenter = getObjCenter(letterMesh);
-		const letterSize = getObjSize(letterMesh);
+		const letterCenter = getCenter(letterMesh);
+		const letterSize = getSize(letterMesh);
 		this.lineIdx = usrData.lineIdx;
 		this.lineCharIdx = usrData.lineCharIdx;
 		if (placement === 'after') {
 			this.lineCharIdx += 1;
 		}
 		this.hook = hook;
-		const lineCenter = -(this.app.blockHeight / 2) + (this.lineIdx * this.app.lineHeight * -1) + (getObjSize(this.app.svgGroup).y / 2);
+		const lineCenter = -(this.app.blockHeight / 2) + (this.lineIdx * this.app.lineHeight * -1) + (getSize(this.app.svgGroup).y / 2);
 		const xShift = ((letterSize.x / 2) + (this.size.x / 3)) * (placement === 'after' ? 1 : -1);
 		this.obj.position.x = letterCenter.x + xShift;
 		this.obj.position.y = lineCenter;
@@ -327,13 +328,4 @@ export default class TextEdit {
 		this.#_updateTextFromLines();
 		cursor.moveRight();
 	}
-}
-
-function getObjCenter(obj) {
-	const box = new THREE.Box3().setFromObject(obj);
-	return box.getCenter(new THREE.Vector3());
-}
-function getObjSize(obj) {
-	const box = new THREE.Box3().setFromObject(obj);
-	return box.getSize(new THREE.Vector3());
 }
