@@ -32,14 +32,14 @@ export class RenderControl {
 			this.inputEl.value = this.initialInputValue;
 		}
 		setObjectPath(this.app.cfg, this.name, value);
-		if (this.options.postUpdate) this.options.postUpdate(this.app.cfg[this.name]);
+		if (this.options.postUpdate) this.options.postUpdate(getObjectPath(this.app.cfg, this.name));
 		this.app.render();
 	}
 	getContainer() {
 		return this.container || this.render();
 	}
 	getId() {
-		return this.name.replace(/([A-Z])/g, '-$1').toLowerCase();
+		return this.name.replace(/([A-Z])/g, '-$1').replace(/\./g, '-').toLowerCase();
 	}
 	getLabel() {
 		if (this.options.label) return this.options.label;
@@ -109,7 +109,7 @@ export class RenderControl {
 				control.appendChild(label);
 			});
 		}
-		if (this.options.postUpdate) this.options.postUpdate(this.app.cfg[this.name]);
+		if (this.options.postUpdate) this.options.postUpdate(getObjectPath(this.app.cfg, this.name));
 		return control;
 	}
 }
