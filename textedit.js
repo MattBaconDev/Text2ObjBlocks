@@ -213,7 +213,7 @@ export default class TextEdit {
 	}
 	// Called after a full re-render
 	onRender() {
-		const depth = this.app.cfg.letterDepth + this.app.cfg.plateDepth;
+		const depth = this.app.cfg.letterDepth + this.app.cfg.blockDepth;
 		if (this.cursor.size === null && this.app.meshes.length) {
 			this.cursor.setSize(this.app.meshes[0].scale.x, this.app.meshes[0].scale.y, depth);
 		}
@@ -232,7 +232,7 @@ export default class TextEdit {
 	renderCheck() {
 		const [cursor, app] = [this.cursor, this.app];
 		if (cursor.size === null && app.meshes.length) {
-			const depth = app.cfg.letterDepth + app.cfg.plateDepth;
+			const depth = app.cfg.letterDepth + app.cfg.blockDepth;
 			cursor.setSize(app.meshes[0].scale.x, app.meshes[0].scale.y, depth);
 		}
 		if (app.cfg.editMode !== 'text') {
