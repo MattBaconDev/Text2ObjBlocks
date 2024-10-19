@@ -13,3 +13,21 @@ export function getSize(obj) {
 	const box = getBox(obj);
 	return box.getSize(new THREE.Vector3());
 }
+
+export function setObjectPath(obj, path, value) {
+	const pathParts = path.split('.');
+	const last = pathParts.pop();
+	let current = obj;
+	pathParts.forEach(key => {
+		current = current[key];
+	});
+	current[last] = value;
+}
+export function getObjectPath(obj, path) {
+	const pathParts = path.split('.');
+	let current = obj;
+	pathParts.forEach(key => {
+		current = current[key];
+	});
+	return current;
+}
