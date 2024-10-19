@@ -130,6 +130,7 @@ export default class Interaction {
 		if (this.app.cfg.editMode !== 'mesh') return;
 		if (ev.key === 'Backspace') {
 			this.resetChanges(this.selectedChar);
+			if (this.selectedBlock) this.resetChanges(this.selectedBlock);
 		}
 		if (!this.selectedChar) return;
 		if (ev.key === 'Escape') return this.clearSelection();
