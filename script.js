@@ -36,6 +36,9 @@ const cfg = {
 	selectedColour: 0x00ff00,
 	orthCamera: false,
 	targetRatio: 0.65,
+	nickRadius: 'auto',
+	nickDepth: 'auto',
+	nickPosition: 'auto',
 	sensitivity: {
 		pan: 1,
 		rotate: 1,
@@ -559,11 +562,13 @@ function debugBox(object, colour = 0xff0000) {
 }
 function nickMesh(mesh, meshSize, mat) {
 	if (!mat) mat = mesh.material.clone();
-	const rad = Math.min(1.5, meshSize.z / 8);
+	const rad = cfg.nickRadius === 'auto' ? Math.min(1.5, meshSize.z / 8) : cfg.nickRadius;
 	const cylinder = new THREE.CylinderGeometry(rad, rad, meshSize.x * 1.1, 32);
 	const cylinderMesh = new THREE.Mesh(cylinder, mat);
 	cylinderMesh.position.copy(mesh.position);
-	cylinderMesh.position.y += meshSize.y / 2;
+	cylinderMesh.position.z += cfg.nickPosition === 'auto' ? 0 : cfg.nickPosition;
+	const depth = (meshSize.y / 2) - (cfg.nickDepth === 'auto' ? 0 : cfg.nickDepth);
+	cylinderMesh.position.y += depth;
 	cylinderMesh.rotation.z = degreesToEuler(90);
 	cylinderMesh.updateMatrix();
 
