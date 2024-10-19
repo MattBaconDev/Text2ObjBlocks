@@ -43,7 +43,7 @@ export default class Interaction {
 		const { object, point } = this.#_meshUnderMouse();
 		if (!object || !point) return;
 		if (object.type !== 'GridHelper') return;
-		const zOffset = this.app.cfg.blockDepth/2;
+		const zOffset = this.app.cfg.depth.block/2;
 		const testPoint = point.clone().add(new THREE.Vector3(0, 0, zOffset));
 		const endsOfLines = this.app.meshes.filter(m => m.userData.type === 'char' && m.userData.isEndOfLine);
 		for (const endMesh of endsOfLines) {
