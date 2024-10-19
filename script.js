@@ -280,7 +280,7 @@ class App {
 				const meshSize = getSize(blockMesh);
 				blockMesh.position.x = lineCenter.x;
 				blockMesh.position.y -= allCenter.y;
-				blockMesh.position.z = (-meshSize.z / 2) + cfg.depth.overlap;
+				blockMesh.position.z = (-meshSize.z / 2);
 				blockMesh.updateMatrix();
 
 				const subbedBlockMesh = nickMesh(blockMesh, meshSize);
@@ -289,7 +289,10 @@ class App {
 
 				const letterGroup = new THREE.Group();
 				letterGroup.name = 'line_' + lines[lgi];
-				letters.forEach(letter => this.interaction.applySelection(letter));
+				letters.forEach(letter => {
+					letter.position.z -= cfg.depth.overlap;
+					this.interaction.applySelection(letter)
+				});
 				letterGroup.add(...letters);
 				letterGroup.add(subbedBlockMesh);
 				this.meshes.push(subbedBlockMesh);
@@ -319,7 +322,7 @@ class App {
 					const blockMesh = new THREE.Mesh(blockGeo, this.blockMat.clone());
 					const meshSize = getSize(blockMesh);
 					blockMesh.position.x = letterCenter.x + (normPadding / 2) - normPadLeft - (blockXPadding / 2);
-					blockMesh.position.z = (-meshSize.z / 2) + cfg.depth.overlap;
+					blockMesh.position.z = (-meshSize.z / 2);
 					blockMesh.updateMatrix();
 
 					const subbedBlockMesh = nickMesh(blockMesh, meshSize);
@@ -331,6 +334,7 @@ class App {
 					const letterGroup = new THREE.Group();
 					letterGroup.name = 'letter_' + letter.name;
 					letter.position.y = allCenter.y;
+					letter.position.z -= cfg.depth.overlap;
 					letterGroup.add(letter);
 					letterGroup.add(subbedBlockMesh);
 					this.meshes.push(subbedBlockMesh);
