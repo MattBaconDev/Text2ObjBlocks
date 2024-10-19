@@ -1,4 +1,5 @@
 import * as THREE from 'three';
+import { getBox, getCenter, getSize } from './utils.js';
 
 export default class Interaction {
 	constructor(app) {
@@ -47,7 +48,7 @@ export default class Interaction {
 		const endsOfLines = this.app.meshes.filter(m => m.userData.type === 'char' && m.userData.isEndOfLine);
 		for (const endMesh of endsOfLines) {
 			const center = getCenter(endMesh);
-			const size = getObjSize(endMesh);
+			const size = getSize(endMesh);
 			const endOfLine = center.add(new THREE.Vector3(size.x, 0, -zOffset));
 			const yDiff = Math.abs(testPoint.y - endOfLine.y);
 			const xDiff = testPoint.x - endOfLine.x;
@@ -61,7 +62,7 @@ export default class Interaction {
 		const startsOfLines = this.app.meshes.filter(m => m.userData.type === 'char' && m.userData.isStartOfLine);
 		for (const startMesh of startsOfLines) {
 			const center = getCenter(startMesh);
-			const size = getObjSize(startMesh);
+			const size = getSize(startMesh);
 			const startOfLine = center.sub(new THREE.Vector3(size.x, 0, zOffset));
 			const yDiff = Math.abs(testPoint.y - startOfLine.y);
 			const xDiff = testPoint.x - startOfLine.x;
@@ -172,18 +173,4 @@ export default class Interaction {
 		mesh.position.copy(mesh.userData.originalPosition);
 		this.app.needsRedraw = true;
 	}
-}
-
-function getBox(obj, expandBy = 0.5) {
-	const box = new THREE.Box3().setFromObject(obj);
-	box.expandByScalar(expandBy);
-	return box;
-}
-function getCenter(obj) {
-	const box = getBox(obj);
-	return box.getCenter(new THREE.Vector3());
-}
-function getObjSize(obj) {
-	const box = getBox(obj);
-	return box.getSize(new THREE.Vector3());
 }
