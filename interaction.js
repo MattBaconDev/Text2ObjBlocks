@@ -121,7 +121,7 @@ export default class Interaction {
 		if (mesh.userData.type === 'block') {
 			mesh = this.app.getMeshByName(mesh.name.replace('block_', ''));
 			if (!mesh && allowNearby) {
-				mesh = this.app.meshes.find(m => getBox(m).containsPoint(point));
+				mesh = this.app.meshes.find(m => getBox(m, 0.5).containsPoint(point));
 			}
 		}
 		if (!mesh || mesh.userData.type !== 'char') return null;

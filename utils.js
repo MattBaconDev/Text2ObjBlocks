@@ -1,8 +1,8 @@
 import * as THREE from 'three';
 
-export function getBox(obj, expandBy = 0.5) {
+export function getBox(obj, expandBy = 0) {
 	const box = new THREE.Box3().setFromObject(obj);
-	box.expandByScalar(expandBy);
+	if (expandBy) box.expandByScalar(expandBy);
 	return box;
 }
 export function getCenter(obj) {
