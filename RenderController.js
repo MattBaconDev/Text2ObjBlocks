@@ -1,3 +1,5 @@
+import { setObjectPath, getObjectPath } from './utils.js';
+
 const defaultControlOptions = {
 	label: '',
 	min: 0,
@@ -14,7 +16,7 @@ export class RenderControl {
 		options = { ...defaultControlOptions, ...options };
 		this.app = app;
 		this.name = name;
-		this.defaultValue = app.cfg[name];
+		this.defaultValue = getObjectPath(app.cfg, name);
 		this.canAuto = type.includes('/auto');
 		this.type = type.replace('/auto', '');
 		this.options = options;
@@ -29,7 +31,7 @@ export class RenderControl {
 			value = this.defaultValue;
 			this.inputEl.value = this.initialInputValue;
 		}
-		this.app.cfg[this.name] = value;
+		setObjectPath(this.app.cfg, this.name, value);
 		if (this.options.postUpdate) this.options.postUpdate(this.app.cfg[this.name]);
 		this.app.render();
 	}
