@@ -131,6 +131,9 @@ class App {
 		});
 	}
 	async render() {
+		/*
+		 * SECTION: Prepare for rendering
+		 */
 		await this.fontProvider.load(this.fontPath);
 		await this.loadPlainFont();
 		elements.currFont.textContent = this.font.names.fullName.en;
@@ -139,6 +142,10 @@ class App {
 			this.#_render();
 		}
 		this.needsRedraw = true;
+
+		/*
+		 * SECTION: Prepare text
+		 */
 		const originalTextValue = elements.textInput.value;
 		const lastChar = originalTextValue[originalTextValue.length - 1];
 		const text = originalTextValue.trim();
@@ -155,6 +162,9 @@ class App {
 		const allSizes = [];
 		const lineGroups = allLetters.slice();
 
+		/*
+		 * SECTION: Create letters
+		 */
 		let tallestLetter = 0;
 		let maxLetterY = 0;
 		let minLetterY = 0;
@@ -215,18 +225,22 @@ class App {
 		});
 		tallestLetter = maxLetterY - minLetterY;
 
+		this.meshes = [...allLetters];
+
+		/*
+		 * SECTION: Block height and line height
+		 */
 		const blockHeight = tallestLetter + cfg.plateYPadding;
 		const lineHeight = cfg.lineSpacing === 'auto' ? blockHeight * 1.15 : (blockHeight + cfg.lineSpacing);
 		this.blockHeight = blockHeight;
 		this.lineHeight = lineHeight;
 
-		const svgGroupBox = new THREE.Box3().setFromObject(this.svgGroup);
-		const svgGroupCenter = new THREE.Vector3();
-		svgGroupBox.getCenter(svgGroupCenter);
-
-		this.svgGroup.scale.y *= -1;
+		this.svgGroup.scale.y *= -1; // Correct text orientation
 		this.scene.add(this.svgGroup);
 
+		/*
+		 * SECTION: Letter Spacing
+		 */
 		let shifted = 0;
 		lineGroups.forEach((lineGroup, lgi) => {
 			const letters = Array.from(lineGroup.children);
@@ -240,8 +254,9 @@ class App {
 			});
 		});
 
-		this.meshes = [...allLetters];
-
+		/*
+		 * SECTION: Block creation
+		 */
 		const allCenter = getObjCenter(this.svgGroup);
 		if (cfg.linoMode) {
 			lineGroups.forEach((lineGroup, lgi) => {
@@ -279,6 +294,7 @@ class App {
 				lineGroups[lgi] = letterGroup;
 			});
 
+			// Save original scale and position, to enable resetting when modifying
 			for (const child of Array.from(lineGroups).flatMap(lg => lg.children)) {
 				if (this.chars.includes(child.name.replace(/\-\d+$/, ''))) {
 					child.userData.originalScale = child.scale.clone();
@@ -320,6 +336,7 @@ class App {
 				lineGroup.translateY(lgi * lineHeight);
 			});
 
+			// Save original scale and position, to enable resetting when modifying
 			for (const group of Array.from(lineGroups).flatMap(lg => lg.children)) {
 				group.children[0].userData.originalScale = group.children[0].scale.clone();
 				group.children[0].userData.originalPosition = group.children[0].position.clone();
@@ -329,22 +346,37 @@ class App {
 		}
 
 		this.svgGroup.updateMatrix();
+
+		/*
+		 * SECTION: Mirroring and centering
+		 */
 		if (cfg.mirror) this.svgGroup.scale.multiply(new THREE.Vector3(-1, 1, 1));
 		const groupCenter = getObjCenter(this.svgGroup);
 		this.svgGroup.position.z += cfg.plateDepth;
 		this.svgGroup.position.y -= groupCenter.y;
 		this.svgGroup.position.x -= groupCenter.x;
 
+		/*
+		 * SECTION: Home grid
+		 */
 		drawGrid(200, 1, 0xAACCEE, 0x226699);
 		drawGrid(200, 10, 0xAACCEE, 0x44CCFF);
 
+		/*
+		 * SECTION: Light source
+		 */
 		const directionalLight = new THREE.DirectionalLight(0xffffff, 3);
 		directionalLight.lookAt(this.svgGroup.position);
 		directionalLight.position.set(0, -25, 100);
 		this.scene.add(directionalLight);
 
+
 		this.svgGroup.updateMatrix();
 		this.scene.updateMatrix();
+
+		/*
+		 * SECTION: Render and initialise
+		 */
 		this.#_render();
 		this.textEdit.onRender();
 		this.initialise();
