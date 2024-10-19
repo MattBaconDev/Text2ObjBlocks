@@ -23,13 +23,13 @@ const cfg = {
 	editMode: 'text',
 	mirror: false,
 	fontSize: 15,
-	plateOverlap: 0.1,
+	blockOverlap: 0.1,
 	letterSpacing: 'auto',
 	lineSpacing: 'auto',
 	letterDepth: 2,
-	plateDepth: 21.318,
-	plateXPadding: 0,
-	plateYPadding: 0,
+	blockDepth: 21.318,
+	blockXPadding: 0,
+	blockYPadding: 0,
 	centreAlign: false,
 	linoMode: false,
 	defaultColour: 0x666666,
@@ -85,7 +85,7 @@ class App {
 	fontProvider = new FontProvider(this);
 	renderController = new RenderController(this);
 	interaction = new Interaction(this);
-	plateMat = makeMaterial(cfg.defaultColour, './textures/metal.jpg', 5);
+	blockMat = makeMaterial(cfg.defaultColour, './textures/metal.jpg', 5);
 	letterMat = makeMaterial(cfg.defaultColour);
 	savedOrbitState = false;
 	plainFont = null;
@@ -182,7 +182,7 @@ class App {
 				const letterGeos = [];
 				shapes.forEach((shape, j) => {
 					const geometry = new THREE.ExtrudeGeometry(shape, {
-						depth: cfg.letterDepth + cfg.plateOverlap,
+						depth: cfg.letterDepth + cfg.blockOverlap,
 						bevelEnabled: false,
 					});
 					letterGeos.push(geometry);
@@ -233,7 +233,7 @@ class App {
 		/*
 		 * SECTION: Block height and line height
 		 */
-		const blockHeight = tallestLetter + cfg.plateYPadding;
+		const blockHeight = tallestLetter + cfg.blockYPadding;
 		const lineHeight = cfg.lineSpacing === 'auto' ? blockHeight * 1.15 : (blockHeight + cfg.lineSpacing);
 		this.blockHeight = blockHeight;
 		this.lineHeight = lineHeight;
@@ -251,7 +251,7 @@ class App {
 			letters.forEach((letter, i) => {
 				if (i === 0) return;
 				let shift = cfg.letterSpacing === 'auto' ? getObjSize(letter).x / 20 : cfg.letterSpacing;
-				if (!cfg.linoMode) shift += cfg.plateXPadding;
+				if (!cfg.linoMode) shift += cfg.blockXPadding;
 				letter.translateX(shifted + shift);
 				shifted += shift;
 			});
@@ -273,25 +273,25 @@ class App {
 				const { normPadLeft } = getGlyphInfo(startLetter.name, startLetterSize);
 				const { normPadRight } = getGlyphInfo(endLetter.name, endLetterSize);
 				let normPadding = normPadLeft + normPadRight;
-				normPadding += cfg.plateXPadding;
-				const plateGeo = new THREE.BoxGeometry(lineSize.x + normPadding, blockHeight, cfg.plateDepth);
-				const plateMesh = new THREE.Mesh(plateGeo, this.plateMat.clone());
-				const meshSize = getObjSize(plateMesh);
-				plateMesh.position.x = lineCenter.x;
-				plateMesh.position.y -= allCenter.y;
-				plateMesh.position.z = (-meshSize.z / 2) + cfg.plateOverlap;
-				plateMesh.updateMatrix();
+				normPadding += cfg.blockXPadding;
+				const blockGeo = new THREE.BoxGeometry(lineSize.x + normPadding, blockHeight, cfg.blockDepth);
+				const blockMesh = new THREE.Mesh(blockGeo, this.blockMat.clone());
+				const meshSize = getObjSize(blockMesh);
+				blockMesh.position.x = lineCenter.x;
+				blockMesh.position.y -= allCenter.y;
+				blockMesh.position.z = (-meshSize.z / 2) + cfg.blockOverlap;
+				blockMesh.updateMatrix();
 
-				const subbedPlateMesh = nickMesh(plateMesh, meshSize);
-				subbedPlateMesh.userData.type = 'block';
-				subbedPlateMesh.name = 'block_' + lines[lgi];
+				const subbedBlockMesh = nickMesh(blockMesh, meshSize);
+				subbedBlockMesh.userData.type = 'block';
+				subbedBlockMesh.name = 'block_' + lines[lgi];
 
 				const letterGroup = new THREE.Group();
 				letterGroup.name = 'line_' + lines[lgi];
 				letters.forEach(letter => this.interaction.applySelection(letter));
 				letterGroup.add(...letters);
-				letterGroup.add(subbedPlateMesh);
-				this.meshes.push(subbedPlateMesh);
+				letterGroup.add(subbedBlockMesh);
+				this.meshes.push(subbedBlockMesh);
 				this.svgGroup.add(letterGroup);
 				letterGroup.translateY(lgi * lineHeight);
 				lineGroups[lgi] = letterGroup;
@@ -313,26 +313,26 @@ class App {
 					const i = allLetters.indexOf(letter);
 					const size = allSizes[i];
 					let { normPadLeft, normPadding } = getGlyphInfo(letter.name, size);
-					normPadding += cfg.plateXPadding;
-					const plateGeo = new THREE.BoxGeometry(size.x + normPadding, blockHeight, cfg.plateDepth);
-					const plateMesh = new THREE.Mesh(plateGeo, this.plateMat.clone());
-					const meshSize = getObjSize(plateMesh);
-					plateMesh.position.x = letterCenter.x + (normPadding / 2) - normPadLeft - (cfg.plateXPadding / 2);
-					plateMesh.position.z = (-meshSize.z / 2) + cfg.plateOverlap;
-					plateMesh.updateMatrix();
+					normPadding += cfg.blockXPadding;
+					const blockGeo = new THREE.BoxGeometry(size.x + normPadding, blockHeight, cfg.blockDepth);
+					const blockMesh = new THREE.Mesh(blockGeo, this.blockMat.clone());
+					const meshSize = getObjSize(blockMesh);
+					blockMesh.position.x = letterCenter.x + (normPadding / 2) - normPadLeft - (cfg.blockXPadding / 2);
+					blockMesh.position.z = (-meshSize.z / 2) + cfg.blockOverlap;
+					blockMesh.updateMatrix();
 
-					const subbedPlateMesh = nickMesh(plateMesh, meshSize);
-					subbedPlateMesh.userData.type = 'block';
-					subbedPlateMesh.name = 'block_' + letter.name;
-					subbedPlateMesh.material.visible = letter.material.visible;
-					if (letter.userData.excludeFromExport) subbedPlateMesh.userData.excludeFromExport = true;
+					const subbedBlockMesh = nickMesh(blockMesh, meshSize);
+					subbedBlockMesh.userData.type = 'block';
+					subbedBlockMesh.name = 'block_' + letter.name;
+					subbedBlockMesh.material.visible = letter.material.visible;
+					if (letter.userData.excludeFromExport) subbedBlockMesh.userData.excludeFromExport = true;
 
 					const letterGroup = new THREE.Group();
 					letterGroup.name = 'letter_' + letter.name;
 					letter.position.y = allCenter.y;
 					letterGroup.add(letter);
-					letterGroup.add(subbedPlateMesh);
-					this.meshes.push(subbedPlateMesh);
+					letterGroup.add(subbedBlockMesh);
+					this.meshes.push(subbedBlockMesh);
 					lineGroup.add(letterGroup);
 					this.interaction.applySelection(letter);
 				}
@@ -355,7 +355,7 @@ class App {
 		 */
 		if (cfg.mirror) this.svgGroup.scale.multiply(new THREE.Vector3(-1, 1, 1));
 		const groupCenter = getObjCenter(this.svgGroup);
-		this.svgGroup.position.z += cfg.plateDepth;
+		this.svgGroup.position.z += cfg.blockDepth;
 		this.svgGroup.position.y -= groupCenter.y;
 		this.svgGroup.position.x -= groupCenter.x;
 

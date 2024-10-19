@@ -139,20 +139,20 @@ export default class RenderController {
 		const fontControlsEl = document.getElementById('font-controls');
 		const fullDepth = document.getElementById('full-depth');
 		const fontSize = new RenderControl(app, 'fontSize', 'number', { max: 100, step: 1 });
-		const letterDepth = new RenderControl(app, 'letterDepth', 'number', { max: 10, postUpdate: (value) => fullDepth.textContent = value + app.cfg.plateDepth });
-		const plateDepth = new RenderControl(app, 'plateDepth', 'number', { max: 30, postUpdate: (value) => fullDepth.textContent = app.cfg.letterDepth + value });
+		const letterDepth = new RenderControl(app, 'letterDepth', 'number', { max: 10, postUpdate: (value) => fullDepth.textContent = value + app.cfg.blockDepth });
+		const blockDepth = new RenderControl(app, 'blockDepth', 'number', { max: 30, postUpdate: (value) => fullDepth.textContent = app.cfg.letterDepth + value });
 		const linoMode = new RenderControl(app, 'linoMode', 'checkbox');
 		const mirrorMode = new RenderControl(app, 'mirror', 'checkbox');
 		const lineSpacing = new RenderControl(app, 'lineSpacing', 'number/auto', { min: -5, max: 20 });
 		const letterSpacing = new RenderControl(app, 'letterSpacing', 'number/auto', { min: -5, max: 20 });
-		const plateXPadding = new RenderControl(app, 'plateXPadding', 'number', { min: -5, max: 20 });
-		const plateYPadding = new RenderControl(app, 'plateYPadding', 'number', { min: -5, max: 20 });
-		const depthsGroup = controlGroup('Depths', letterDepth, plateDepth);
+		const blockXPadding = new RenderControl(app, 'blockXPadding', 'number', { min: -5, max: 20 });
+		const blockYPadding = new RenderControl(app, 'blockYPadding', 'number', { min: -5, max: 20 });
+		const depthsGroup = controlGroup('Depths', letterDepth, blockDepth);
 		const fullDepthGroup = fullDepth.closest('.control-group');
 		depthsGroup.append(fullDepthGroup.children[0]);
 		fullDepthGroup.remove();
 		fontControlsEl.after(depthsGroup);
-		fontControlsEl.after(controlGroup('Padding', plateXPadding, plateYPadding));
+		fontControlsEl.after(controlGroup('Padding', blockXPadding, blockYPadding));
 		fontControlsEl.after(controlGroup('Spacing', lineSpacing, letterSpacing));
 		fontControlsEl.after(controlGroup('General', fontSize, linoMode, mirrorMode));
 
