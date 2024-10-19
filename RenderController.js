@@ -158,9 +158,9 @@ export default class RenderController {
 		fontControlsEl.after(controlGroup('Spacing', lineSpacing, letterSpacing));
 		fontControlsEl.after(controlGroup('General', fontSize, linoMode, mirrorMode));
 
-		const nickRadius = new RenderControl(app, 'nickRadius', 'number/auto', { label: 'Radius', min: 0, max: 15, autoValue: 1.5 });
-		const nickDepth = new RenderControl(app, 'nickDepth', 'number/auto', { label: 'Depth', min: -15, max: 15, autoValue: 0 });
-		const nickPosition = new RenderControl(app, 'nickPosition', 'number/auto', { label: 'Placement', min: -15, max: 15, autoValue: 0 });
+		const nickRadius = new RenderControl(app, 'nick.radius', 'number/auto', { label: 'Radius', min: 0, max: 15, autoValue: 1.5 });
+		const nickDepth = new RenderControl(app, 'nick.depth', 'number/auto', { label: 'Depth', min: -15, max: 15, autoValue: 0 });
+		const nickPosition = new RenderControl(app, 'nick.position', 'number/auto', { label: 'Placement', min: -15, max: 15, autoValue: 0 });
 		depthsGroup.after(controlGroup('Nick', nickRadius, nickDepth, nickPosition));
 	}
 }
