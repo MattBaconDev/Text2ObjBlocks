@@ -31,21 +31,14 @@ const cfg = {
 	blockDepth: 21.318,
 	blockXPadding: 'auto',
 	blockYPadding: 'auto',
-	centreAlign: false,
 	linoMode: false,
 	defaultColour: 0x666666,
 	selectedColour: 0x00ff00,
 	orthCamera: false,
-	targetRatio: 0.65,
 	nick: {
 		radius: 'auto',
 		depth: 'auto',
 		position: 'auto',
-	},
-	sensitivity: {
-		pan: 1,
-		rotate: 1,
-		zoom: 1
 	}
 };
 cfg.defaultValue = `ABCDEFGHIJKLMN
