@@ -4,6 +4,7 @@ const defaultControlOptions = {
 	max: 10,
 	step: 0.25,
 	postUpdate: null,
+	autoValue: 1,
 };
 
 export class RenderControl {
@@ -17,7 +18,7 @@ export class RenderControl {
 		this.canAuto = type.includes('/auto');
 		this.type = type.replace('/auto', '');
 		this.options = options;
-		this.initialInputValue = this.canAuto && this.defaultValue === 'auto' && this.type === 'number' ? 1 : this.defaultValue;
+		this.initialInputValue = this.canAuto && this.defaultValue === 'auto' && this.type === 'number' ? options.autoValue : this.defaultValue;
 		if (!options.getter && this.type === 'checkbox') options.getter = (input) => input.checked;
 		else options.getter = (input) => input.value;
 	}
