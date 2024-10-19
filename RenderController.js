@@ -78,7 +78,10 @@ export class RenderControl {
 			auto.type = 'checkbox';
 			auto.id = `${id}-auto`;
 			auto.checked = this.defaultValue === 'auto';
-			auto.addEventListener('change', () => this.updateCfg(auto.checked ? 'auto' : this.options.getter(input)));
+			auto.addEventListener('change', () => {
+				this.updateCfg(auto.checked ? 'auto' : this.options.getter(input));
+				if (!auto.checked) input.focus();
+			});
 			control.appendChild(auto);
 		}
 		control.appendChild(input);
