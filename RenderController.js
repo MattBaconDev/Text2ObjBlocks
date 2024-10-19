@@ -145,8 +145,8 @@ export default class RenderController {
 		const mirrorMode = new RenderControl(app, 'mirror', 'checkbox');
 		const lineSpacing = new RenderControl(app, 'lineSpacing', 'number/auto', { min: -5, max: 20 });
 		const letterSpacing = new RenderControl(app, 'letterSpacing', 'number/auto', { min: -5, max: 20 });
-		const blockXPadding = new RenderControl(app, 'blockXPadding', 'number', { min: -5, max: 20 });
-		const blockYPadding = new RenderControl(app, 'blockYPadding', 'number', { min: -5, max: 20 });
+		const blockXPadding = new RenderControl(app, 'blockXPadding', 'number/auto', { min: -5, max: 20 });
+		const blockYPadding = new RenderControl(app, 'blockYPadding', 'number/auto', { min: -5, max: 20 });
 		const depthsGroup = controlGroup('Depths', letterDepth, blockDepth);
 		const fullDepthGroup = fullDepth.closest('.control-group');
 		depthsGroup.append(fullDepthGroup.children[0]);
