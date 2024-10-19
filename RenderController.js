@@ -77,6 +77,7 @@ export class RenderControl {
 			const auto = document.createElement('input');
 			auto.type = 'checkbox';
 			auto.id = `${id}-auto`;
+			label.setAttribute('for', auto.id);
 			auto.checked = this.defaultValue === 'auto';
 			auto.addEventListener('change', () => {
 				this.updateCfg(auto.checked ? 'auto' : this.options.getter(input));
