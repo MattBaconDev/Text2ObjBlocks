@@ -28,8 +28,8 @@ const cfg = {
 	lineSpacing: 'auto',
 	letterDepth: 2,
 	blockDepth: 21.318,
-	blockXPadding: 0,
-	blockYPadding: 0,
+	blockXPadding: 'auto',
+	blockYPadding: 'auto',
 	centreAlign: false,
 	linoMode: false,
 	defaultColour: 0x666666,
@@ -146,6 +146,9 @@ class App {
 		}
 		this.needsRedraw = true;
 
+		const blockXPadding = cfg.blockXPadding === 'auto' ? 0 : cfg.blockXPadding;
+		const blockYPadding = cfg.blockYPadding === 'auto' ? 0 : cfg.blockYPadding;
+
 		/*
 		 * SECTION: Prepare text
 		 */
@@ -233,7 +236,7 @@ class App {
 		/*
 		 * SECTION: Block height and line height
 		 */
-		const blockHeight = tallestLetter + cfg.blockYPadding;
+		const blockHeight = tallestLetter + blockYPadding;
 		const lineHeight = cfg.lineSpacing === 'auto' ? blockHeight * 1.15 : (blockHeight + cfg.lineSpacing);
 		this.blockHeight = blockHeight;
 		this.lineHeight = lineHeight;
@@ -251,7 +254,7 @@ class App {
 			letters.forEach((letter, i) => {
 				if (i === 0) return;
 				let shift = cfg.letterSpacing === 'auto' ? getObjSize(letter).x / 20 : cfg.letterSpacing;
-				if (!cfg.linoMode) shift += cfg.blockXPadding;
+				if (!cfg.linoMode) shift += blockXPadding;
 				letter.translateX(shifted + shift);
 				shifted += shift;
 			});
@@ -273,7 +276,7 @@ class App {
 				const { normPadLeft } = getGlyphInfo(startLetter.name, startLetterSize);
 				const { normPadRight } = getGlyphInfo(endLetter.name, endLetterSize);
 				let normPadding = normPadLeft + normPadRight;
-				normPadding += cfg.blockXPadding;
+				normPadding += blockXPadding;
 				const blockGeo = new THREE.BoxGeometry(lineSize.x + normPadding, blockHeight, cfg.blockDepth);
 				const blockMesh = new THREE.Mesh(blockGeo, this.blockMat.clone());
 				const meshSize = getObjSize(blockMesh);
@@ -313,11 +316,11 @@ class App {
 					const i = allLetters.indexOf(letter);
 					const size = allSizes[i];
 					let { normPadLeft, normPadding } = getGlyphInfo(letter.name, size);
-					normPadding += cfg.blockXPadding;
+					normPadding += blockXPadding;
 					const blockGeo = new THREE.BoxGeometry(size.x + normPadding, blockHeight, cfg.blockDepth);
 					const blockMesh = new THREE.Mesh(blockGeo, this.blockMat.clone());
 					const meshSize = getObjSize(blockMesh);
-					blockMesh.position.x = letterCenter.x + (normPadding / 2) - normPadLeft - (cfg.blockXPadding / 2);
+					blockMesh.position.x = letterCenter.x + (normPadding / 2) - normPadLeft - (blockXPadding / 2);
 					blockMesh.position.z = (-meshSize.z / 2) + cfg.blockOverlap;
 					blockMesh.updateMatrix();
 
