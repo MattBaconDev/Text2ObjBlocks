@@ -81,6 +81,10 @@ export class RenderControl {
 		}
 		input.name = this.name;
 		input.value = this.initialInputValue;
+		if (this.type === 'checkbox') {
+			input.checked = this.defaultValue === true;
+			input.value = true;
+		}
 		input.addEventListener('input', () => this.updateCfg());
 		input.addEventListener('keydown', (e) => {
 			const step = parseFloat(input.step);
