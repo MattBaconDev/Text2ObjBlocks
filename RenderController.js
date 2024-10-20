@@ -26,7 +26,9 @@ export class RenderControl {
 	}
 	updateCfg(value) {
 		value = typeof value === 'undefined' ? this.options.getter(this.inputEl) : value;
-		this.inputEl.setAttribute('value', value);
+		if (!(this.type === 'number' && isNaN(value*1))) {
+			this.inputEl.setAttribute('value', value);
+		}
 		value = this.type === 'number' ? parseFloat(value) : value;
 		if (this.type === 'number' && isNaN(value)) {
 			value = this.defaultValue;
