@@ -48,7 +48,7 @@ const cfg = {
 		enabled: true,
 		radius: 'auto',
 		depth: 'auto',
-		position: 'auto',
+		offset: 'auto',
 	}
 };
 cfg.defaultValue = `ABCDEFGHIJKLMN
@@ -651,7 +651,7 @@ function nickMesh(mesh, meshSize, mat) {
 	const cylinder = new THREE.CylinderGeometry(rad, rad, meshSize.x * 1.1, 32);
 	const cylinderMesh = new THREE.Mesh(cylinder, mat);
 	cylinderMesh.position.copy(mesh.position);
-	cylinderMesh.position.z += cfg.nick.position === 'auto' ? 0 : cfg.nick.position;
+	cylinderMesh.position.z += cfg.nick.offset === 'auto' ? 0 : cfg.nick.offset;
 	const depth = (meshSize.y / 2) - (cfg.nick.depth === 'auto' ? 0 : cfg.nick.depth);
 	cylinderMesh.position.y += depth;
 	cylinderMesh.rotation.z = degreesToEuler(90);
