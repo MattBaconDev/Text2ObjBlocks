@@ -31,6 +31,13 @@ const cfg = {
 		block: 21.318,
 		overlap: 0.1,
 	},
+	groove: {
+		shape: 'none', // none, trapezoid, square, circle
+		depth: 'auto',
+		size: 'auto',
+		angle: 'auto',
+		offset: 0,
+	},
 	blockXPadding: 'auto',
 	blockYPadding: 'auto',
 	linoMode: false,
@@ -325,7 +332,17 @@ class App {
 					blockMesh.position.z = (-meshSize.z / 2);
 					blockMesh.updateMatrix();
 
-					const subbedBlockMesh = nickMesh(blockMesh, meshSize);
+					let subbedBlockMesh = blockMesh;
+
+					if (!letter.userData.isSpace) {
+						if (cfg.nick.depth > 0 || cfg.nick.depth === 'auto') {
+							subbedBlockMesh = nickMesh(subbedBlockMesh, meshSize);
+						}
+						if (cfg.groove.shape !== 'none') {
+							subbedBlockMesh = grooveMesh(subbedBlockMesh, meshSize);
+						}
+					}
+
 					subbedBlockMesh.userData.type = 'block';
 					subbedBlockMesh.name = 'block_' + letter.name;
 					subbedBlockMesh.material.visible = letter.material.visible;
@@ -549,6 +566,75 @@ function debugBox(object, colour = 0xff0000) {
 	const box = new THREE.BoxHelper(object, colour);
 	app.scene.add(box);
 	return box;
+}
+function grooveMesh(mesh, meshSize, mat) {
+	if (!mat) mat = mesh.material.clone();
+	let geo = new THREE.BoxGeometry();
+	const size = cfg.groove.size === 'auto' ? meshSize.y / 3 : cfg.groove.size;
+	const depth = cfg.groove.depth === 'auto' ? meshSize.z / 20 : cfg.groove.depth;
+	const depthPadding = 1;
+	let trapMult = 0;
+	switch (cfg.groove.shape) {
+		case 'square':
+			geo = new THREE.BoxGeometry(size, meshSize.x + 2, depth + depthPadding);
+			break;
+		case 'circle':
+			geo = new THREE.CylinderGeometry(size, size, meshSize.x + depthPadding, 32);
+			break;
+		case 'trapezoid':
+			let angle = 30, angleRads = 0;
+			if (cfg.groove.angle === 'auto') {
+				angleRads = degreesToEuler(angle);
+				let bottomSize = size + (2 * Math.tan(angleRads) * depth);
+				if (bottomSize > app.blockHeight * 0.9) {
+					while (bottomSize > app.blockHeight * 0.9) {
+						angle -= 1;
+						angleRads = degreesToEuler(angle);
+						bottomSize = size + (2 * Math.tan(angleRads) * depth);
+					}
+				}
+			}
+			else {
+				angle = cfg.groove.angle;
+				angleRads = degreesToEuler(angle);
+			}
+			const bottomSize = size + (2 * Math.tan(angleRads) * (depth + depthPadding)); // Slightly arger, to avoid strange clipping issues
+			trapMult = bottomSize / size;
+			geo = new THREE.CylinderGeometry(size, bottomSize, depth + depthPadding, 4);
+			geo.rotateY(degreesToEuler(45));
+			break;
+	}
+	const cutoutMesh = new THREE.Mesh(geo, mat);
+	let cutoutSize = getSize(cutoutMesh);
+	cutoutMesh.position.copy(mesh.position);
+	cutoutMesh.position.z -= meshSize.z / 2;
+	if (cfg.groove.shape === 'trapezoid') {
+		const scaleDiffX = size / (cutoutSize.x / trapMult);
+		const scaleDiffY = size / (cutoutSize.z / trapMult);
+		cutoutMesh.scale.set(scaleDiffX, 1, scaleDiffY); // Y & X are swapped
+		cutoutSize = getSize(cutoutMesh);
+		cutoutMesh.position.z -= cutoutSize.y / 2;
+		cutoutMesh.position.z += depth;
+		cutoutMesh.position.y -= cfg.groove.offset;
+		cutoutMesh.rotation.x = degreesToEuler(90);
+		const targetWidth = meshSize.x + 0.2;
+		const widthDiff = targetWidth / size;
+		cutoutMesh.scale.x *= widthDiff;
+	}
+	else {
+		cutoutMesh.position.z -= cutoutSize.z / 2;
+		cutoutMesh.position.z += depth;
+		cutoutMesh.rotation.z = degreesToEuler(90);
+	}
+	cutoutMesh.updateMatrix();
+
+	const meshCSG = CSG.fromMesh(mesh, 0);
+	const cylCSG = CSG.fromMesh(cutoutMesh, 1);
+	const subbed = meshCSG.subtract(cylCSG);
+	const subMesh = CSG.toMesh(subbed, mesh.matrix);
+	subMesh.position.copy(mesh.position);
+	subMesh.material = mat;
+	return subMesh;
 }
 function nickMesh(mesh, meshSize, mat) {
 	if (!mat) mat = mesh.material.clone();
