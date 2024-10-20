@@ -187,6 +187,15 @@ body:has(#text-input:hover,#text-input:focus) #svg {
 	#depth-block {
 		width: 60px;
 	}
+	.control-group .render-control:has(#nick-enabled:not(:checked)) ~ .render-control {
+		display: none;
+	}
+	.control-group .render-control:has(#groove-shape[value="none"]) ~ .render-control {
+		display: none;
+	}
+	.control-group .render-control:has(#groove-shape:not([value="trapezoid"])) ~ .render-control:has(#groove-angle) {
+		display: none;
+	}
 	#render-info {
 		text-align: center;
 		color: #CCC;
