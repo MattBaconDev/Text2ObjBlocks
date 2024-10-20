@@ -26,6 +26,7 @@ export class RenderControl {
 	}
 	updateCfg(value) {
 		value = typeof value === 'undefined' ? this.options.getter(this.inputEl) : value;
+		this.inputEl.setAttribute('value', value);
 		value = this.type === 'number' ? parseFloat(value) : value;
 		if (this.type === 'number' && isNaN(value)) {
 			value = this.defaultValue;
@@ -57,6 +58,7 @@ export class RenderControl {
 			const select = document.createElement('select');
 			select.id = id;
 			select.name = this.name;
+			select.setAttribute('value', this.defaultValue);
 			this.inputEl = select;
 			this.options.values.forEach(value => {
 				const option = document.createElement('option');
