@@ -183,6 +183,15 @@ export default class RenderController {
 		const nickRadius = new RenderControl(app, 'nick.radius', 'number/auto', { label: 'Radius', min: 0, max: 15, autoValue: 1.5 });
 		const nickDepth = new RenderControl(app, 'nick.depth', 'number/auto', { label: 'Depth', min: -15, max: 15, autoValue: 0 });
 		const nickPosition = new RenderControl(app, 'nick.position', 'number/auto', { label: 'Placement', min: -15, max: 15, autoValue: 0 });
-		depthsGroup.after(controlGroup('Nick', nickRadius, nickDepth, nickPosition));
+		const nickGroup = controlGroup('Nick', nickRadius, nickDepth, nickPosition);
+		depthsGroup.after(nickGroup);
+
+		const grooveShape = new RenderControl(app, 'groove.shape', 'select', { label: 'Shape', values: ['none', 'trapezoid', 'square', 'circle'] });
+		const grooveDepth = new RenderControl(app, 'groove.depth', 'number/auto', { label: 'Depth', min: -15, max: 15, autoValue: 2 });
+		const grooveSize = new RenderControl(app, 'groove.size', 'number/auto', { label: 'Size', min: 0, max: 15, autoValue: 4 });
+		const grooveAngle = new RenderControl(app, 'groove.angle', 'number/auto', { label: 'Angle', min: 0, max: 90, step: 0.5, autoValue: 30 });
+		const grooveOffset = new RenderControl(app, 'groove.offset', 'number', { label: 'Offset', min: -10, max: 10, step: 0.1 });
+		const grooveGroup = controlGroup('Groove', grooveShape, grooveDepth, grooveSize, grooveAngle, grooveOffset);
+		nickGroup.after(grooveGroup);
 	}
 }
