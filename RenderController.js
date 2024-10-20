@@ -48,10 +48,28 @@ export class RenderControl {
 	render() {
 		const control = document.createElement('div');
 		control.classList.add('render-control');
+		this.container = control;
 		const id = this.getId();
 		const label = document.createElement('label');
 		label.textContent = this.getLabel();
 		label.setAttribute('for', id);
+		if (this.type === 'select') {
+			const select = document.createElement('select');
+			select.id = id;
+			select.name = this.name;
+			this.inputEl = select;
+			this.options.values.forEach(value => {
+				const option = document.createElement('option');
+				option.value = value;
+				option.textContent = value.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase());
+				select.appendChild(option);
+			});
+			select.addEventListener('change', () => this.updateCfg());
+			control.appendChild(label);
+			control.appendChild(select);
+			if (this.options.postUpdate) this.options.postUpdate(getObjectPath(this.app.cfg, this.name));
+			return control;
+		}
 		const input = document.createElement('input');
 		input.id = id;
 		input.type = this.type;
@@ -88,7 +106,6 @@ export class RenderControl {
 			control.appendChild(auto);
 		}
 		control.appendChild(input);
-		this.container = control;
 		this.inputEl = input;
 		if (this.type === 'radio') {
 			this.options.values.forEach(value => {
