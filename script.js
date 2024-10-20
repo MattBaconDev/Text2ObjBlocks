@@ -633,6 +633,7 @@ function grooveMesh(mesh, meshSize, mat) {
 		cutoutMesh.position.z -= cutoutSize.z / 2;
 		cutoutMesh.position.z += depth;
 		cutoutMesh.rotation.z = degreesToEuler(90);
+		cutoutMesh.position.y -= cfg.groove.offset;
 	}
 	cutoutMesh.updateMatrix();
 
