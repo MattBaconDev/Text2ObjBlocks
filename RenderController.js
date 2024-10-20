@@ -187,8 +187,8 @@ export default class RenderController {
 		const nickEnabled = new RenderControl(app, 'nick.enabled', 'checkbox', { label: 'Enabled' });
 		const nickRadius = new RenderControl(app, 'nick.radius', 'number/auto', { label: 'Radius', min: 0, max: 15, autoValue: 1.5 });
 		const nickDepth = new RenderControl(app, 'nick.depth', 'number/auto', { label: 'Depth', min: -15, max: 15, autoValue: 0 });
-		const nickPosition = new RenderControl(app, 'nick.position', 'number/auto', { label: 'Placement', min: -15, max: 15, autoValue: 0 });
-		const nickGroup = controlGroup('Nick', nickEnabled, nickRadius, nickDepth, nickPosition);
+		const nickOffset = new RenderControl(app, 'nick.offset', 'number/auto', { label: 'Offset', min: -15, max: 15, autoValue: 0 });
+		const nickGroup = controlGroup('Nick', nickEnabled, nickRadius, nickDepth, nickOffset);
 		depthsGroup.after(nickGroup);
 
 		const grooveShape = new RenderControl(app, 'groove.shape', 'select', { label: 'Shape', values: ['none', 'trapezoid', 'square', 'circle'] });
