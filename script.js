@@ -45,6 +45,7 @@ const cfg = {
 	selectedColour: 0x00ff00,
 	orthCamera: false,
 	nick: {
+		enabled: true,
 		radius: 'auto',
 		depth: 'auto',
 		position: 'auto',
@@ -335,7 +336,7 @@ class App {
 					let subbedBlockMesh = blockMesh;
 
 					if (!letter.userData.isSpace) {
-						if (cfg.nick.depth > 0 || cfg.nick.depth === 'auto') {
+						if (cfg.nick.enabled) {
 							subbedBlockMesh = nickMesh(subbedBlockMesh, meshSize);
 						}
 						if (cfg.groove.shape !== 'none') {
