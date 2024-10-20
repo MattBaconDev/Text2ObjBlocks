@@ -116,7 +116,7 @@ body:has(#text-input:hover,#text-input:focus) #svg {
 		.control-group .label {
 			font-size: 1.1em;
 			font-weight: bold;
-			margin-top: 10px;
+			margin-top: 5px;
 		}
 		.control-group .controls {
 			display: flex;
@@ -221,7 +221,7 @@ body:has(#text-input:hover,#text-input:focus) #svg {
 			padding: 3px 5px;
 		}
 
-@media all and (max-height: 750px), (max-width: 1200px) {
+@media all and (max-height: 960px), (max-width: 1200px) {
 	.control-group.toggleable {
 		max-height: 1.5em;
 		overflow: hidden;
