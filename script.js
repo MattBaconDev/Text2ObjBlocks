@@ -291,7 +291,14 @@ class App {
 				blockMesh.position.z = (-meshSize.z / 2);
 				blockMesh.updateMatrix();
 
-				const subbedBlockMesh = nickMesh(blockMesh, meshSize);
+				let subbedBlockMesh = blockMesh;
+				if (cfg.nick.enabled) {
+					subbedBlockMesh = nickMesh(subbedBlockMesh, meshSize);
+				}
+				if (cfg.groove.shape !== 'none') {
+					subbedBlockMesh = grooveMesh(subbedBlockMesh, meshSize);
+				}
+
 				subbedBlockMesh.userData.type = 'block';
 				subbedBlockMesh.name = 'block_' + lines[lgi];
 
