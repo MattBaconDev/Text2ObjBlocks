@@ -24,7 +24,7 @@ const cfg = {
 	defaultFontPath: './fonts/Roboto-Regular.ttf',
 	defaultValue: 'ABC',
 	editMode: 'text',
-	mirror: false,
+	mirror: true,
 	fontSize: 15,
 	measureChar: 'x',
 	letterSpacing: 'auto',
