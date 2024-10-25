@@ -93,6 +93,11 @@ body:has(#text-input:hover,#text-input:focus) #svg {
 	font-size: 1.1em;
 	font-weight: bold;
 }
+#render-controls:not(:has(#mirror:checked)) #export-button::after {
+	content: '!! Not mirrored !!';
+	color: #F00;
+	display: block;
+}
 #render-controls {
 	background: #111;
 	color: #FFF;
