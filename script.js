@@ -23,7 +23,7 @@ const mmInPt = 0.352806;
 const cfg = {
 	defaultFontPath: './fonts/Roboto-Regular.ttf',
 	defaultValue: 'ABC',
-	editMode: 'text',
+	editMode: 'mesh',
 	mirror: true,
 	fontSize: 15,
 	measureChar: 'x',
