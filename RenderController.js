@@ -168,7 +168,7 @@ export default class RenderController {
 		this.app = app;
 		const fontControlsEl = document.getElementById('font-controls');
 		const fullDepth = document.getElementById('full-depth');
-		const fontSize = new RenderControl(app, 'fontSize', 'number', { max: 100, step: 1 });
+		const fontSize = new RenderControl(app, 'fontSize', 'number', { label: 'Font size (pt)', max: 100, step: 1 });
 		const letterDepth = new RenderControl(app, 'depth.letter', 'number', { label: 'Letter', max: 10, postUpdate: (value) => fullDepth.textContent = value + app.cfg.depth.block });
 		const overlap = new RenderControl(app, 'depth.overlap', 'number', { label: 'Overlap', max: 10 });
 		const blockDepth = new RenderControl(app, 'depth.block', 'number', { label: 'Block', max: 30, postUpdate: (value) => fullDepth.textContent = app.cfg.depth.letter + value });

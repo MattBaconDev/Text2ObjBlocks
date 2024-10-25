@@ -18,12 +18,15 @@ const clock = new THREE.Clock();
 
 await import('opentype');
 
+const mmInPt = 0.352806;
+
 const cfg = {
 	defaultFontPath: './fonts/Roboto-Regular.ttf',
 	defaultValue: 'ABC',
 	editMode: 'text',
 	mirror: false,
 	fontSize: 15,
+	measureChar: 'x',
 	letterSpacing: 'auto',
 	lineSpacing: 'auto',
 	depth: {
@@ -171,7 +174,6 @@ class App {
 
 		this.svgGroup = new THREE.Group();
 		const allLetters = Array.from(this.svgGroup.children).slice(0, 0);
-		const allSizes = [];
 		const lineGroups = allLetters.slice();
 
 		/*
@@ -222,7 +224,6 @@ class App {
 			let minY = 0;
 			lineLetters.forEach(letter => {
 				const size = getSize(letter);
-				allSizes.push(size);
 				const letterCenter = getCenter(letter).y;
 				const letterHeight = size.y;
 				const topY = letterCenter + (letterHeight / 2);
@@ -238,6 +239,23 @@ class App {
 		tallestLetter = maxLetterY - minLetterY;
 
 		this.meshes = [...allLetters];
+
+		const sizeTestLetter = allLetters.find(l => l.name === cfg.measureChar);
+		let ptSizeScale = 1;
+		if (sizeTestLetter) {
+			const size = getSize(sizeTestLetter);
+			// 1mm = 2.835pt
+			// 1pt = 0.352778mm
+			// mm = pt * 0.352778
+			const currSizeY = size.y;
+			const targetMM = cfg.fontSize * mmInPt;
+			const multY = targetMM / currSizeY;
+			ptSizeScale = multY;
+		}
+
+		tallestLetter *= ptSizeScale;
+		allLetters.forEach(letter => letter.scale.set(ptSizeScale, ptSizeScale, ptSizeScale));
+		const allSizes = allLetters.map(letter => getSize(letter));
 
 		/*
 		 * SECTION: Block height and line height

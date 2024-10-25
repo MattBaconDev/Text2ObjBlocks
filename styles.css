@@ -184,6 +184,9 @@ body:has(#text-input:hover,#text-input:focus) #svg {
 	.render-control input[type="number"] {
 		width: 44px;
 	}
+	#font-size {
+		width: 35px;
+	}
 	#depth-block {
 		width: 60px;
 	}
