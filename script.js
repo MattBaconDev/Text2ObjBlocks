@@ -89,7 +89,6 @@ class App {
 	initialised = false;
 	fontPath = cfg.defaultFontPath;
 	fontProvider = new FontProvider(this);
-	renderController = new RenderController(this);
 	interaction = new Interaction(this);
 	blockMat = makeMaterial(cfg.defaultColour, './textures/metal.jpg', 5);
 	letterMat = makeMaterial(cfg.defaultColour);
@@ -114,6 +113,7 @@ class App {
 		this.cameraControls = new CameraControls(this.camera, this.renderer.domElement);
 		elements.textInput.value = cfg.defaultValue;
 		this.textEdit = new TextEdit(this);
+		this.renderController = new RenderController(this);
 		document.querySelector(`input[name="edit-mode"][value="${cfg.editMode}"]`).checked = true;
 	}
 	emptyScene() {

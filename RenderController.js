@@ -1,3 +1,4 @@
+import { Events } from './events.js';
 import { setObjectPath, getObjectPath } from './utils.js';
 
 const defaultControlOptions = {
@@ -16,6 +17,7 @@ export class RenderControl {
 		options = { ...defaultControlOptions, ...options };
 		this.app = app;
 		this.name = name;
+		this.events = Events.getScope('app').childScope('controls');
 		this.defaultValue = getObjectPath(app.cfg, name);
 		this.canAuto = type.includes('/auto');
 		this.type = type.replace('/auto', '');
@@ -36,6 +38,7 @@ export class RenderControl {
 		}
 		setObjectPath(this.app.cfg, this.name, value);
 		if (this.options.postUpdate) this.options.postUpdate(getObjectPath(this.app.cfg, this.name));
+		this.events.trigger('cfg.updated', { path: this.name, value }, true);
 		this.app.render();
 	}
 	getContainer() {
