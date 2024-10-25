@@ -27,6 +27,7 @@ const cfg = {
 	mirror: true,
 	fontSize: 15,
 	measureChar: 'x',
+	textBuilder: false,
 	letterSpacing: 'auto',
 	lineSpacing: 'auto',
 	depth: {
@@ -479,8 +480,13 @@ elements.textInput.addEventListener('input', () => {
 	app.render();
 });
 
+app.events.on('cfg.updated', ({ path, value }) => {
+	if (app.cfg.textBuilder && path.startsWith('text.')) buildTextFromCfg();
+});
+
 enableExportScene(elements.exportButton, app);
 
+if (app.cfg.textBuilder) buildTextFromCfg();
 app.render();
 
 
@@ -504,6 +510,23 @@ elements.editModeControl.addEventListener('change', ev => {
 app.textEdit.cursor.syncWith(elements.textInput);
 
 // helpers
+function buildTextFromCfg() {
+	const upper = ['ABCDEFGHIJKLM', 'NOPQRSTUVWXYZ'];
+	const lower = ['abcdefghijklm', 'nopqrstuvwxyz'];
+	const numbers = ['0123456789'];
+	const symbols = ['!"£$%^&**();:_-=+#~,./<>?'];
+	const lines = [];
+	if (cfg.text.charsUpper) lines.push(...upper);
+	if (cfg.text.charsLower) lines.push(...lower);
+	if (cfg.text.numbers) lines.push(...numbers);
+	if (cfg.text.symbols) lines.push(...symbols);
+	let fullValue = lines.join('\n');
+	if (cfg.text.vowelMult > 1) {
+		const vowelRex = new RegExp('[aeiou' + (cfg.text.yIsVowel ? 'y' : '') + ']', 'ig');
+		fullValue = fullValue.replace(vowelRex, ($0) => new Array(cfg.text.vowelMult).fill($0).join(''));
+	}
+	return elements.textInput.value = fullValue;
+}
 function buildSVGData(text, font) {
 	text = text.replace(/\s/g, ' ').trim();
 	const paths = font.getPaths(text, 0, 0, cfg.fontSize).filter(p => p.commands.length);

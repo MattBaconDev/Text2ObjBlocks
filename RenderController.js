@@ -185,6 +185,15 @@ export default class RenderController {
 		fontControlsEl.after(depthsGroup);
 		fontControlsEl.after(controlGroup('Padding', blockXPadding, blockYPadding));
 		fontControlsEl.after(controlGroup('Spacing', lineSpacing, letterSpacing));
+		if (app.cfg.textBuilder) {
+			const charsUpper = new RenderControl(app, 'text.charsUpper', 'checkbox', { label: 'Uppercase' });
+			const charsLower = new RenderControl(app, 'text.charsLower', 'checkbox', { label: 'Lowercase' });
+			const numbers = new RenderControl(app, 'text.numbers', 'checkbox', { label: 'Numbers' });
+			const symbols = new RenderControl(app, 'text.symbols', 'checkbox', { label: 'Symbols' });
+			const vowelMult = new RenderControl(app, 'text.vowelMult', 'number', { label: 'Vowel multiplier', min: 0, max: 10, step: 1 });
+			const yIsVowel = new RenderControl(app, 'text.yIsVowel', 'checkbox', { label: 'Y is a vowel' });
+			fontControlsEl.after(controlGroup('Text', charsUpper, charsLower, numbers, symbols, vowelMult, yIsVowel));
+		}
 		fontControlsEl.after(controlGroup('General', fontSize, linoMode, mirrorMode));
 
 		const nickEnabled = new RenderControl(app, 'nick.enabled', 'checkbox', { label: 'Enabled' });

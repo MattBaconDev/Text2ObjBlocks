@@ -236,7 +236,7 @@ body:has(#text-input:hover,#text-input:focus) #svg {
 	}
 	.control-group:focus-within,
 	.control-group.expanded {
-		max-height: 12em;
+		max-height: 13em;
 	}
 	.control-group .label {
 		cursor: pointer;
@@ -257,7 +257,7 @@ body:has(#text-input:hover,#text-input:focus) #svg {
 	}
 	.control-group:focus-within .controls,
 	.control-group.expanded .controls {
-		max-height: 12em;
+		max-height: 13em;
 	}
 }
 @media all and (max-height: 650px), (max-width: 600px) {
