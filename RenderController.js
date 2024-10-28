@@ -194,6 +194,12 @@ export default class RenderController {
 			const yIsVowel = new RenderControl(app, 'text.yIsVowel', 'checkbox', { label: 'Y is a vowel' });
 			fontControlsEl.after(controlGroup('Text', charsUpper, charsLower, numbers, symbols, vowelMult, yIsVowel));
 		}
+		const schemeControls = [];
+		app.fountSchemes.forEach(scheme => {
+			const fountScheme = new RenderControl(app, 'fountSchemes.' + scheme.slug, 'checkbox', { label: scheme.fullName });
+			schemeControls.push(fountScheme);
+		});
+		fontControlsEl.after(controlGroup('Fount schemes', ...schemeControls));
 		fontControlsEl.after(controlGroup('General', fontSize, linoMode, mirrorMode));
 
 		const nickEnabled = new RenderControl(app, 'nick.enabled', 'checkbox', { label: 'Enabled' });

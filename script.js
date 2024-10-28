@@ -12,6 +12,7 @@ import { FontLoader } from 'three/addons/loaders/FontLoader.js';
 import TextEdit from './textedit.js';
 import { Events } from './events.js';
 import { getCenter, getSize } from './utils.js';
+import { allFountSchemes } from './fount-schemes.js';
 
 CameraControls.install({ THREE });
 const clock = new THREE.Clock();
@@ -30,6 +31,11 @@ const cfg = {
 	textBuilder: false,
 	letterSpacing: 'auto',
 	lineSpacing: 'auto',
+	fountSchemes: {
+		'capital-3A': true,
+		'lower-3a': true,
+		'num-Numbers-1': true,
+	},
 	depth: {
 		letter: 2,
 		block: 21.318,
@@ -125,6 +131,7 @@ class App {
 		this.cameraControls = new CameraControls(this.camera, this.renderer.domElement);
 		elements.textInput.value = cfg.defaultValue;
 		this.textEdit = new TextEdit(this);
+		this.fountSchemes = allFountSchemes;
 		this.renderController = new RenderController(this);
 		document.querySelector(`input[name="edit-mode"][value="${cfg.editMode}"]`).checked = true;
 	}
@@ -490,11 +497,13 @@ elements.textInput.addEventListener('input', () => {
 
 app.events.on('cfg.updated', ({ path, value }) => {
 	if (app.cfg.textBuilder && path.startsWith('text.')) buildTextFromCfg();
+	if (path.startsWith('fountSchemes.')) buildTextFromSchemes().then(() => app.render());
 });
 
 enableExportScene(elements.exportButton, app);
 
 if (app.cfg.textBuilder) buildTextFromCfg();
+else buildTextFromSchemes();
 app.render();
 
 
@@ -533,6 +542,35 @@ function buildTextFromCfg() {
 		const vowelRex = new RegExp('[aeiou' + (cfg.text.yIsVowel ? 'y' : '') + ']', 'ig');
 		fullValue = fullValue.replace(vowelRex, ($0) => new Array(cfg.text.vowelMult).fill($0).join(''));
 	}
+	return elements.textInput.value = fullValue;
+}
+async function buildTextFromSchemes() {
+	const schemeSlugs = Object.keys(cfg.fountSchemes).filter(key => cfg.fountSchemes[key] === true);
+	const schemes = app.fountSchemes.filter(sch => schemeSlugs.includes(sch.slug));
+	await Promise.all(schemes.map(s => s.load()));
+	function charStr(char, count) {
+		let str = '';
+		while (str.length < count) str += char;
+		return str;
+	}
+	const charCounts = [];
+	schemes.forEach(scheme => {
+		charCounts.push(...Object.entries(scheme.chars));
+	});
+	let str = '';
+	const poundSymbol = decodeURIComponent('%C2%A3');
+	for (const charCount of charCounts) {
+		str += charStr(...charCount);
+		if (charCount[0].toLowerCase() === 'm') str += '\n';
+		if (charCount[0].toLowerCase() === 'z') str += '\n';
+		if (charCount[0].toLowerCase() === ';') str += '\n';
+		if (charCount[0].toLowerCase() === poundSymbol) str += '\n';
+	}
+	if (str.trim().length === 0) {
+		str = cfg.defaultValue;
+	}
+	const lines = str.split(/\r?\n/);
+	const fullValue = lines.join('\n');
 	return elements.textInput.value = fullValue;
 }
 function buildSVGData(text, font) {
