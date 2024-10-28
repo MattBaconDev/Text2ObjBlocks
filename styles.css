@@ -258,6 +258,7 @@ body:has(#text-input:hover,#text-input:focus) #svg {
 	.control-group:focus-within .controls,
 	.control-group.expanded .controls {
 		max-height: 13em;
+		overflow-y: auto;
 	}
 }
 @media all and (max-height: 650px), (max-width: 600px) {
