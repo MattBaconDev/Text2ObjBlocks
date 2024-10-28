@@ -569,6 +569,7 @@ async function buildTextFromSchemes() {
 	if (str.trim().length === 0) {
 		str = cfg.defaultValue;
 	}
+	str = str.replace('9A', '9\nA');
 	const lines = str.split(/\r?\n/);
 	const fullValue = lines.join('\n');
 	return elements.textInput.value = fullValue;
