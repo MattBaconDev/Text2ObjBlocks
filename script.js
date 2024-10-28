@@ -256,7 +256,7 @@ class App {
 
 		this.meshes = [...allLetters];
 
-		const sizeTestLetter = allLetters.find(l => l.name === cfg.measureChar);
+		const sizeTestLetter = allLetters.find(l => l.name === cfg.measureChar) || allLetters.find(l => l.name.startsWith('x-'));
 		let ptSizeScale = 1;
 		if (sizeTestLetter) {
 			const size = getSize(sizeTestLetter);
