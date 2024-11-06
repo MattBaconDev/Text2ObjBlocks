@@ -1,6 +1,20 @@
 /** @type {Array<FountScheme>} */
 export const allFountSchemes = [];
 
+let schemeData = null;
+
+let fetchingSchemes = null;
+
+export async function preloadSchemes() {
+	if (schemeData) return;
+	fetchingSchemes = fetch('fount-schemes.json');
+	const res = await fetchingSchemes;
+	const data = await res.json();
+	Object.keys(data).forEach(key => data[key] = JSON.parse(data[key]));
+	schemeData = data;
+	fetchingSchemes = null;
+}
+
 class FountScheme {
 	/** @type {Record<string,number>} */
 	chars = null;
@@ -13,12 +27,9 @@ class FountScheme {
 		this.fullName = this.name + (this.category === 'num' ? '' : ' ' + this.category);
 	}
 	async load() {
+		if (!schemeData) await preloadSchemes();
 		if (this.chars) return this.chars;
-		const fileName = this.slug + '.json';
-		const path = 'fount-schemes/' + fileName;
-		const res = await fetch(path);
-		if (!res.ok) throw new Error('Failed fetching font scheme: ' + fileName);
-		const data = await res.json();
+		const data = schemeData[this.slug] || '{}';
 		this.chars = data.chars;
 		this.options = data.options;
 		this.totalChars = Object.values(this.chars).reduce((tot, val) => tot + val, 0);
