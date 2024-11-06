@@ -303,6 +303,14 @@ class App {
 		/*
 		 * SECTION: Block creation
 		 */
+		const blockMesh_tpl = (() => {
+			const geo = new THREE.BoxGeometry(1, blockHeight, cfg.depth.block);
+			let mesh = new THREE.Mesh(geo, this.blockMat.clone());
+			const size = getSize(mesh);
+			if (cfg.nick.enabled) mesh = nickMesh(mesh, size);
+			if (cfg.groove.shape !== 'none') mesh = grooveMesh(mesh, size);
+			return mesh;
+		})();
 		const allCenter = getCenter(this.svgGroup);
 		if (cfg.linoMode) {
 			lineGroups.forEach((lineGroup, lgi) => {
@@ -317,24 +325,16 @@ class App {
 				const { normPadRight } = getGlyphInfo(endLetter.name, endLetterSize);
 				let normPadding = normPadLeft + normPadRight;
 				normPadding += blockXPadding;
-				const blockGeo = new THREE.BoxGeometry(lineSize.x + normPadding, blockHeight, cfg.depth.block);
-				const blockMesh = new THREE.Mesh(blockGeo, this.blockMat.clone());
+				const blockMesh = blockMesh_tpl.clone();
+				blockMesh.scale.x = lineSize.x + normPadding;
 				const meshSize = getSize(blockMesh);
 				blockMesh.position.x = lineCenter.x;
 				blockMesh.position.y -= allCenter.y;
 				blockMesh.position.z = (-meshSize.z / 2);
 				blockMesh.updateMatrix();
 
-				let subbedBlockMesh = blockMesh;
-				if (cfg.nick.enabled) {
-					subbedBlockMesh = nickMesh(subbedBlockMesh, meshSize);
-				}
-				if (cfg.groove.shape !== 'none') {
-					subbedBlockMesh = grooveMesh(subbedBlockMesh, meshSize);
-				}
-
-				subbedBlockMesh.userData.type = 'block';
-				subbedBlockMesh.name = 'block_' + lines[lgi];
+				blockMesh.userData.type = 'block';
+				blockMesh.name = 'block_' + lines[lgi];
 
 				const letterGroup = new THREE.Group();
 				letterGroup.name = 'line_' + lines[lgi];
@@ -343,8 +343,8 @@ class App {
 					this.interaction.applySelection(letter)
 				});
 				letterGroup.add(...letters);
-				letterGroup.add(subbedBlockMesh);
-				this.meshes.push(subbedBlockMesh);
+				letterGroup.add(blockMesh);
+				this.meshes.push(blockMesh);
 				this.svgGroup.add(letterGroup);
 				letterGroup.translateY(lgi * lineHeight);
 				lineGroups[lgi] = letterGroup;
@@ -367,36 +367,25 @@ class App {
 					const size = allSizes[i];
 					let { normPadLeft, normPadding } = getGlyphInfo(letter.name, size);
 					normPadding += blockXPadding;
-					const blockGeo = new THREE.BoxGeometry(size.x + normPadding, blockHeight, cfg.depth.block);
-					const blockMesh = new THREE.Mesh(blockGeo, this.blockMat.clone());
+					const blockMesh = blockMesh_tpl.clone();
+					blockMesh.scale.x = size.x + normPadding;
 					const meshSize = getSize(blockMesh);
 					blockMesh.position.x = letterCenter.x + (normPadding / 2) - normPadLeft - (blockXPadding / 2);
 					blockMesh.position.z = (-meshSize.z / 2);
 					blockMesh.updateMatrix();
 
-					let subbedBlockMesh = blockMesh;
-
-					if (!letter.userData.isSpace) {
-						if (cfg.nick.enabled) {
-							subbedBlockMesh = nickMesh(subbedBlockMesh, meshSize);
-						}
-						if (cfg.groove.shape !== 'none') {
-							subbedBlockMesh = grooveMesh(subbedBlockMesh, meshSize);
-						}
-					}
-
-					subbedBlockMesh.userData.type = 'block';
-					subbedBlockMesh.name = 'block_' + letter.name;
-					subbedBlockMesh.material.visible = letter.material.visible;
-					if (letter.userData.excludeFromExport) subbedBlockMesh.userData.excludeFromExport = true;
+					blockMesh.userData.type = 'block';
+					blockMesh.name = 'block_' + letter.name;
+					blockMesh.material.visible = letter.material.visible;
+					if (letter.userData.excludeFromExport) blockMesh.userData.excludeFromExport = true;
 
 					const letterGroup = new THREE.Group();
 					letterGroup.name = 'letter_' + letter.name;
 					letter.position.y = allCenter.y;
 					letter.position.z -= cfg.depth.overlap;
 					letterGroup.add(letter);
-					letterGroup.add(subbedBlockMesh);
-					this.meshes.push(subbedBlockMesh);
+					letterGroup.add(blockMesh);
+					this.meshes.push(blockMesh);
 					lineGroup.add(letterGroup);
 					this.interaction.applySelection(letter);
 				}
