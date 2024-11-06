@@ -31,3 +31,36 @@ export function getObjectPath(obj, path) {
 	});
 	return current;
 }
+
+export function targetThrottle(callback, limit) {
+	let waiting = new Set();
+	let blocked = new Set();
+	return function tryCall(ev, ...args) {
+		const key = ev.target;
+		if (waiting.has(key)) {
+			blocked.add(key);
+			return;
+		}
+		callback.apply(this, [ ev, ...args ]);
+		blocked.delete(key);
+		waiting.add(key);
+		setTimeout(() => {
+			waiting.delete(key);
+			if (blocked.has(key)) tryCall(ev, ...args);
+		}, limit);
+	}
+}
+export function throttle(callback, limit) {
+	let waiting = false;
+	let blocked = false;
+	return function tryCall(...args) {
+		if (waiting) {
+			blocked = true;
+			return;
+		}
+		callback.apply(this, args);
+		blocked = false;
+		waiting = true;
+		setTimeout(() => { waiting = false; if (blocked) tryCall(...args) }, limit);
+	}
+}
