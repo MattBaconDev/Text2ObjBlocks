@@ -199,10 +199,17 @@ export function init(app) {
 		evHub.trigger('pane:change', { action: 'show', name, container });
 	}
 
-	function promptFontReselect(fontFileName) {
-		alert('Font file cannot be loaded, please re-select ("' + (fontFileName || app.cfg.fontFileName) + '")');
-		if (currPane !== 'text') loadPane('text');
-		controlPane.querySelector('#font-input').click();
+	async function promptFontReselect(fontFileName) {
+		const font = app.fontProvider.getCachedFont(fontFileName);
+		if (font) {
+			await app.fontProvider.load(font.fontPath, fontFileName);
+			app.render();
+		}
+		else {
+			alert('Font file cannot be loaded, please re-select ("' + (fontFileName || app.cfg.fontFileName) + '")');
+			if (currPane !== 'text') loadPane('text');
+			controlPane.querySelector('#font-input').click();
+		}
 	}
 
 	const paneCache = {};
@@ -234,13 +241,12 @@ export function init(app) {
 				const preset = cfgPresets.find(p => p.name === presetSelector.value);
 				if (!preset) {
 					await app.resetConfig();
+					if (app.fontPath.includes(app.cfg.fontFileName) === false) promptFontReselect(app.cfg.fontFileName);
 				}
 				else if (app.cfg !== preset.cfg) {
 					app.cfg = preset.cfg;
+					if (app.fontPath.includes(app.cfg.fontFileName) === false) await promptFontReselect(app.cfg.fontFileName);
 					app.render();
-				}
-				if (app.fontPath.includes(app.cfg.fontFileName) === false) {
-					promptFontReselect(app.cfg.fontFileName);
 				}
 				const currPane = controlPane.querySelector('.pane-contents');
 				if (currPane) applyConfig(currPane);
