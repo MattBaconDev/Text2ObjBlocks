@@ -9,45 +9,262 @@
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-	<div id="text-controls">
-		<div id="edit-mode-control">
-			Edit mode:
-			<label>
-				<span>Text (with input)</span>
-				<input type="radio" name="edit-mode" value="textarea">
-			</label>
-			<label>
-				<span>Text</span>
-				<input type="radio" name="edit-mode" value="text" id="edit-mode-text">
-			</label>
-			<label>
-				<span>Mesh</span>
-				<input type="radio" name="edit-mode" value="mesh" id="edit-mode-mesh">
-			</label>
+	<header id="app-header">
+		<h1>Text &rarr; Letterpress</h1>
+		<button type="button" class="icon-brightness-contrast" data-action="toggle:darkTheme"></button>
+	</header>
+	<main>
+		<div id="side-pane">
+			<button type="button" class="icon-cog" title="General" data-action="pane:general"></button>
+			<button type="button" class="icon-font-size" title="Font & Text" data-action="pane:text"></button>
+			<button type="button" class="icon-equalizer" title="Spacing, padding & depths" data-action="pane:spacing-sizing"></button>
+			<button type="button" class="icon-scissors" title="Nick & Groove" data-action="pane:cutouts"></button>
+			<button type="button" class="icon-compass" title="Navigation" data-action="pane:navigation"></button>
+			<button type="button" class="icon-download" title="Export" data-action="pane:export"></button>
+			<button type="button" class="icon-undo" title="Reset" data-action="reset"></button>
 		</div>
-		<textarea id="text-input" cols="25" rows="5"></textarea>
-	</div>
-	<div id="render-controls">
+		<div id="control-pane">
+		</div>
+		<div id="viewport">
+			<canvas id="viewer-canvas" tabindex="-1"></canvas>
+		</div>
+	</main>
+
+	<!-- PANE : General -->
+	<template id="tpl-pane-general">
+		<h2>General settings</h2>
+		<div class="control-set">
+			<div class="control">
+				<i class="help icon-question" data-tooltip="Each line uses a single block i.e. linotype printing"></i>
+				<label>Lino mode <input type="checkbox" data-cfg="linoMode"></label>
+			</div>
+			<div class="control">
+				<i class="help icon-question" data-tooltip="Flips letters on the x axis to account for the print process"></i>
+				<label>Mirror <input type="checkbox" data-cfg="mirror"></label>
+			</div>
+		</div>
+	</template>
+
+	<!-- PANE : Font + Text -->
+	<template id="tpl-pane-text">
+		<h2>Font & Text settings</h2>
 		<div id="font-controls">
-			<div id="curr-font"></div>
-			<label id="font-input-label" for="font-input">Custom Font</label></span>
-			<input type="file" id="font-input" accept=".otf,.ttf,.woff,.woff2" title="Custom Font" style="visibility: hidden;">
+			<h3>Typeface / Font</h3>
+			<h4 class="control">
+				<i class="help icon-question" data-tooltip="Set your desired font size (in pts)"></i>
+				<label>Size: <input type="range" min="1" max="50" data-cfg="fontSize" /> <input type="number" inputmode="numeric" min="1" max="50" data-cfg="fontSize" /></label>
+			</h4>
+			<h4 class="control">
+				<i class="help icon-info" data-tooltip="(font info)"></i>
+				<span>Current: <span id="curr-font"></span></span>
+			</h4>
+			<div class="control">
+				<i class="help icon-question" data-tooltip="Switch to a font file from your device"></i>
+				<label class="btn" id="font-input-label" for="font-input">Load your own font...</label></span>
+				<input type="file" id="font-input" accept=".otf,.ttf,.woff,.woff2" title="Custom Font" style="visibility: hidden; width: 1px;">
+			</div>
 		</div>
-		<div class="control-group">
+		<div id="fount-schemes">
+			<h3>Fount schemes <i class="help icon-question" data-tooltip="Combine standarised presets of character counts"></i></h3>
+			<div class="category">
+				<h4>Capital</h4>
+				<label>A3<input type="checkbox" data-cfg="fountSchemes.capital-3A" /></label>
+				<label>A4<input type="checkbox" data-cfg="fountSchemes.capital-4A" /></label>
+				<label>A5<input type="checkbox" data-cfg="fountSchemes.capital-5A" /></label>
+			</div>
+			<div class="category">
+				<h4>Lower</h4>
+				<label>a3<input type="checkbox" data-cfg="fountSchemes.lower-3a" /></label>
+				<label>a4<input type="checkbox" data-cfg="fountSchemes.lower-4a" /></label>
+				<label>a5<input type="checkbox" data-cfg="fountSchemes.lower-5a" /></label>
+			</div>
+			<div class="category">
+				<h4>Numbers</h4>
+				<label>Set 01<input type="checkbox" data-cfg="fountSchemes.num-Numbers-1" /></label>
+				<label>Set 02<input type="checkbox" data-cfg="fountSchemes.num-Numbers-2" /></label>
+			</div>
+		</div>
+		<div id="text-override">
+			<h3>
+				Text override
+				<i class="help icon-question" data-tooltip="Text typed in here will override selected fount schemes"></i>
+				<button type="button" class="btn" data-action="resetTextOverride">Reset</button>
+			</h3>
+			<textarea id="text-input" cols="25" rows="6" data-cfg="textOverride" placeholder="Type custom text here"></textarea>
+		</div>
+		<div id="text-preview">
+			<h3>Text SVG preview</h3>
+			<svg class="preview" width="280" height="100" viewBox="0 0 160 40"></svg>
+		</div>
+	</template>
+
+	<!-- PANE : Spacing + sizing -->
+	<template id="tpl-pane-spacing-sizing">
+		<h2>Spacing and sizing</h2>
+		<div id="spacing-controls" class="control-set">
+			<h3>Spacing</h3>
+			<div class="control">
+				<i class="help icon-question" data-tooltip="Change the spacing between characters"></i>
+				<label>
+					Char:
+					<input type="checkbox" class="auto" data-cfg="spacing.letterAuto" />
+				</label>
+				<input type="range" min="-2" max="10" data-cfg="spacing.letter" />
+				<input type="number" inputmode="numeric" min="-2" max="10" data-cfg="spacing.letter" />
+			</div>
+			<div class="control">
+				<i class="help icon-question" data-tooltip="Change the spacing between lines"></i>
+				<label>
+					Line:
+					<input type="checkbox" class="auto" data-cfg="spacing.lineAuto" />
+				</label>
+				<input type="range" min="-2" max="10" data-cfg="spacing.line" />
+				<input type="number" inputmode="numeric" min="-2" max="10" data-cfg="spacing.line" />
+			</div>
+		</div>
+		<div id="depth-controls" class="control-set">
+			<h3>Depth</h3>
+			<div class="control">
+				<i class="help icon-question" data-tooltip="Change how much the char mesh overlaps the block mesh"></i>
+				<label>
+					Overlap:
+					<input type="range" min="0" max="10" step="0.1" data-cfg="depth.overlap" />
+					<input type="number" inputmode="numeric" min="0" max="10" step="0.1" data-cfg="depth.overlap" />
+				</label>
+			</div>
+			<div class="control">
+				<i class="help icon-question" data-tooltip="Change the depth/height of the characters"></i>
+				<label>
+					Char:
+					<input type="range" min="0.5" max="10" step="0.25" data-cfg="depth.letter" />
+					<input type="number" inputmode="numeric" min="0.5" max="10" step="0.25" data-cfg="depth.letter" />
+				</label>
+			</div>
+			<div class="control">
+				<i class="help icon-question" data-tooltip="Change the depth/height of the block"></i>
+				<label>
+					Block:
+					<input type="range" min="1" max="30" data-cfg="depth.block" />
+					<input type="number" inputmode="numeric" min="1" max="30" data-cfg="depth.block" />
+				</label>
+			</div>
 			<div id="render-info">
-				<div class="render-info-item">Full depth: <span id="full-depth">??</span></div>
+				<div class="render-info-item">Full depth: <span id="full-depth" data-calc="depth.block + depth.letter">??</span></div>
 			</div>
 		</div>
-		<div class="control-group">
-			<div id="view-buttons">
-				<button id="reset-view-btn">Reset view</button>
-				<button id="zoom-fit-btn">Zoom to fit</button>
+	</template>
+
+	<!-- PANE : cutouts -->
+	<template id="tpl-pane-cutouts">
+		<h2>Nick & Groove</h2>
+
+		<div id="nick-controls">
+			<h3>Nick</h3>
+			<div class="control-set">
+				<div class="control">
+					<i class="help icon-question" data-tooltip="Enable cutting a nick out of each block"></i>
+					<label>Enabled <input type="checkbox" data-cfg="nick.enabled"></label>
+				</div>
+				<div class="control">
+					<i class="help icon-question" data-tooltip="The radius of the cylinder used to create the nick"></i>
+					<label>
+						Radius:
+						<input type="checkbox" class="auto" data-cfg="nick.radiusAuto" />
+					</label>
+					<input type="range" min="0.1" max="6" step="0.1" data-cfg="nick.radius" />
+					<input type="number" inputmode="numeric" min="0.1" max="6" step="0.1" data-cfg="nick.radius" />
+				</div>
+				<div class="control">
+					<i class="help icon-question" data-tooltip="How deep into the block the nick is cut"></i>
+					<label>
+						Depth:
+						<input type="checkbox" class="auto" data-cfg="nick.depthAuto" />
+					</label>
+					<input type="range" min="-2" max="2" step="0.1" data-cfg="nick.depth" />
+					<input type="number" inputmode="numeric" min="-2" max="2" step="0.1" data-cfg="nick.depth" />
+				</div>
+				<div class="control">
+					<i class="help icon-question" data-tooltip="Shift the nick off-centre by this amount"></i>
+					<label>
+						Offset:
+						<input type="checkbox" class="auto" data-cfg="nick.offsetAuto" />
+					</label>
+					<input type="range" min="-10" max="10" step="0.1" data-cfg="nick.offset" />
+					<input type="number" inputmode="numeric" min="-10" max="10" step="0.1" data-cfg="nick.offset" />
+				</div>
 			</div>
-			<button id="export-button">Export</button>
 		</div>
-	</div>
-	<svg id="svg" width="500" height="100" viewBox="0 0 160 40"></svg>
-    <canvas id="viewer-canvas" tabindex="-1"></canvas>
+
+		<div id="groove-controls">
+			<h3>Groove</h3>
+			<div class="control-set">
+				<div id="groove-shape-choice" class="control">
+					<label class="groove-shape" data-shape="none"><input type="radio" name="groove-shape" value="none" data-cfg="groove.shape"></label>
+					<label class="groove-shape" data-shape="square"><input type="radio" name="groove-shape" value="square" data-cfg="groove.shape"></label>
+					<label class="groove-shape" data-shape="trapezoid"><input type="radio" name="groove-shape" value="trapezoid" data-cfg="groove.shape"></label>
+					<label class="groove-shape" data-shape="circle"><input type="radio" name="groove-shape" value="circle" data-cfg="groove.shape"></label>
+				</div>
+				<div class="control">
+					<i class="help icon-question" data-tooltip="The far the groove cuts into the block"></i>
+					<label>
+						Depth:
+						<input type="checkbox" class="auto" data-cfg="groove.depthAuto" />
+					</label>
+					<input type="range" min="0.1" max="6" step="0.1" data-cfg="groove.depth" />
+					<input type="number" inputmode="numeric" min="0.1" max="6" step="0.1" data-cfg="groove.depth" />
+				</div>
+				<div class="control">
+					<i class="help icon-question" data-tooltip="How wide the groove is cut"></i>
+					<label>
+						Width:
+						<input type="checkbox" class="auto" data-cfg="groove.sizeAuto" />
+					</label>
+					<input type="range" min="0.1" max="6" step="0.1" data-cfg="groove.size" />
+					<input type="number" inputmode="numeric" min="0.1" max="6" step="0.1" data-cfg="groove.size" />
+				</div>
+				<div class="control" data-control="angle">
+					<i class="help icon-question" data-tooltip="The angle of the trapezoid sides"></i>
+					<label>
+						Angle:
+						<input type="checkbox" class="auto" data-cfg="groove.angleAuto" />
+					</label>
+					<input type="range" min="1" max="90" step="1" data-cfg="groove.angle" />
+					<input type="number" inputmode="numeric" min="1" max="90" step="1" data-cfg="groove.angle" />
+				</div>
+				<div class="control">
+					<i class="help icon-question" data-tooltip="Shift the nick off-centre by this amount"></i>
+					<label>
+						Offset:
+						<input type="checkbox" class="auto" data-cfg="groove.offsetAuto" />
+					</label>
+					<input type="range" min="-5" max="5" step="0.1" data-cfg="groove.offset" />
+					<input type="number" inputmode="numeric" min="-5" max="5" step="0.1" data-cfg="groove.offset" />
+				</div>
+			</div>
+		</div>
+	</template>
+
+	<!-- PANE : Navigation -->
+	<template id="tpl-pane-navigation">
+		<h2>Navigation</h2>
+		<div class="control-set">
+			<button class="btn" type="button" data-action="resetView">Reset view</button>
+			<button class="btn" type="button" data-action="zoomToFit">Zoom to fit</button>
+		</div>
+	</template>
+
+	<!-- PANE : Export -->
+	<template id="tpl-pane-export">
+		<h2>Export</h2>
+		<button class="btn" type="button" data-action="exportScene">Export</button>
+		<h2>Config presets</h2>
+
+		<select id="cfg-presets">
+			<option value="">App default</option>
+		</select>
+		<button id="cfg-save" type="button" data-action="saveConfig">Save config as...</button>
+	</template>
+
 	<script type="importmap">
 		{
 			"imports": {

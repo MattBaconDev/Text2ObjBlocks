@@ -2,35 +2,55 @@ import * as THREE from 'three';
 import { SVGLoader } from 'three/addons/loaders/SVGLoader.js';
 import * as BufferGeometryUtils from 'three/addons/utils/BufferGeometryUtils.js';
 import FontProvider from './fonts.js';
-import { enableExportScene } from './export.js';
-import RenderController from './RenderController.js';
 import Interaction from './interaction.js';
 import { CSG } from './libs/CSGMesh.js';
 import CameraControls from './libs/camera-controls.module.js';
 import { TextGeometry } from 'three/addons/geometries/TextGeometry.js';
 import { FontLoader } from 'three/addons/loaders/FontLoader.js';
-import TextEdit from './textedit.js';
 import { Events } from './events.js';
-import { getCenter, getSize } from './utils.js';
-import { allFountSchemes } from './fount-schemes.js';
+import { getCenter, getSize, throttle } from './utils.js';
+import { allFountSchemes, preloadSchemes } from './fount-schemes.js';
+import { init as initControls } from './controls.js';
 
 CameraControls.install({ THREE });
 const clock = new THREE.Clock();
 
 await import('opentype');
 
-const mmInPt = 0.352806;
+// TODO: BUG: Fix pt size scaling not working if no 'x' in the text
 
-const cfg = {
-	defaultFontPath: './fonts/Roboto-Regular.ttf',
-	defaultValue: 'ABC',
+// TODO: Enable selection of 3D text (drag & create a box?)
+// TODO: Fix typing text fast into meshes (cursor position)
+// TODO: (low priority) See if can fix the splitting of the mesh around the nick
+
+/*
+Alpha chars
+AaBbCcDdEeFfGgHhIiJjKkLlMmNnOoPpQqRrSsTtUuVvWwXxYyZz
+!"£$%^&*()-_=+'@;:#~\/,.[]{}
+*/
+
+const mmInPt = 0.352806;
+const defaultFontPath = './fonts/Roboto-Regular.ttf';
+
+const defaultConfig = {
+	fontFileName: defaultFontPath.replace(/^(.*\/?.*\/)?([^\/]+)$/, '$2'),
+	defaultValue: `ABCDEFGHIJKLMN
+OPQRSTUVWXYZ
+abcdefghijklmn
+opqrstuvwxyz
+1234567890`,
 	editMode: 'mesh',
 	mirror: true,
 	fontSize: 15,
 	measureChar: 'x',
 	textBuilder: false,
-	letterSpacing: 'auto',
-	lineSpacing: 'auto',
+	textOverride: '',
+	spacing: {
+		letterAuto: true,
+		letter: 1,
+		lineAuto: true,
+		line: 1,
+	},
 	fountSchemes: {
 		'capital-3A': true,
 		'lower-3a': true,
@@ -43,9 +63,13 @@ const cfg = {
 	},
 	groove: {
 		shape: 'none', // none, trapezoid, square, circle
-		depth: 'auto',
-		size: 'auto',
-		angle: 'auto',
+		depthAuto: true,
+		depth: 1,
+		sizeAuto: true,
+		size: 2.5,
+		angleAuto: true,
+		angle: 30,
+		offsetAuto: true,
 		offset: 0,
 	},
 	text: {
@@ -64,39 +88,41 @@ const cfg = {
 	orthCamera: false,
 	nick: {
 		enabled: true,
-		radius: 'auto',
-		depth: 'auto',
-		offset: 'auto',
+		radiusAuto: true,
+		radius: 2,
+		depthAuto: true,
+		depth: 0,
+		offsetAuto: true,
+		offset: 0,
 	}
 };
-cfg.defaultValue = `ABCDEFGHIJKLMN
-OPQRSTUVWXYZ
-abcdefghijklmn
-opqrstuvwxyz
-1234567890`;
+/** @type {typeof defaultConfig} */
+let cfg = JSON.parse(JSON.stringify(defaultConfig));
 
 function getElById(id) {
 	return document.getElementById(id);
 }
 
 const elements = {
+	viewport: getElById('viewport'),
 	canvas: getElById('viewer-canvas'),
-	svg: getElById('svg'),
-	currFont: getElById('curr-font'),
-	fontInput: getElById('font-input'),
-	textInput: getElById('text-input'),
-	exportButton: getElById('export-button'),
-	resetViewBtn: getElById('reset-view-btn'),
-	zoomFitBtn: getElById('zoom-fit-btn'),
-	editModeControl: getElById('edit-mode-control'),
 };
+
+function getViewportDims() {
+	return {
+		width: elements.viewport.clientWidth,
+		height: elements.viewport.clientHeight,
+	};
+}
 
 class App {
 	elements = elements;
-	cfg = cfg;
+	get cfg() { return cfg; }
+	set cfg(val) { cfg = val; }
 	get font() {
 		return this.fontProvider.font;
 	}
+	builtText = '';
 	text = '';
 	lines = [];
 	meshes = [];
@@ -105,9 +131,7 @@ class App {
 	scene = new THREE.Scene();
 	svgGroup = new THREE.Group();
 	initialised = false;
-	fontPath = cfg.defaultFontPath;
-	fontProvider = new FontProvider(this);
-	interaction = new Interaction(this);
+	fontPath = defaultFontPath;
 	blockMat = makeMaterial(cfg.defaultColour, './textures/metal.jpg', 5);
 	letterMat = makeMaterial(cfg.defaultColour);
 	savedOrbitState = false;
@@ -116,31 +140,42 @@ class App {
 	events = Events.createScope('app');
 	constructor(container) {
 		if (!container) container = document.body;
-		this.camera = new THREE.PerspectiveCamera(25, window.innerWidth / window.innerHeight, 0.1, 5000);
+		const { width, height } = getViewportDims();
+		this.camera = new THREE.PerspectiveCamera(25, width / height, 0.1, 5000);
 		if (cfg.orthCamera) this.camera = new THREE.OrthographicCamera(-100, 100, 100, -100, 0.1, 1000);
 		this.canvas = elements.canvas;
 		this.renderer = new THREE.WebGLRenderer({ canvas: this.canvas, antialias: true });
-		this.renderer.setSize(window.innerWidth, window.innerHeight);
+		this.renderer.setSize(width, height);
 		this.renderer.setPixelRatio(window.devicePixelRatio);
-		document.body.appendChild(this.renderer.domElement);
+		elements.viewport.appendChild(this.renderer.domElement);
 		this.camera.position.z = 150;
 		this.camera.position.y = -250;
 		this.text = '';
 		if (cfg.orthCamera) this.camera.scale.multiplyScalar(0.2);
 		this.scene.background = new THREE.Color(0x053555);
 		this.cameraControls = new CameraControls(this.camera, this.renderer.domElement);
-		elements.textInput.value = cfg.defaultValue;
-		this.textEdit = new TextEdit(this);
+		this.fontProvider = new FontProvider(this);
+		this.interaction = new Interaction(this);
 		this.fountSchemes = allFountSchemes;
-		this.renderController = new RenderController(this);
-		document.querySelector(`input[name="edit-mode"][value="${cfg.editMode}"]`).checked = true;
+		initControls(this);
+	}
+	async initText() {
+		if (this.cfg.textBuilder) buildTextFromCfg();
+		else await buildTextFromSchemes();
+	}
+	async resetConfig() {
+		cfg = JSON.parse(JSON.stringify(defaultConfig));
+		this.cfg = cfg;
+		await this.initText();
+		this.events.trigger('cfg:reset');
+		return this.render();
 	}
 	emptyScene() {
 		emptyObject(this.svgGroup);
 		emptyObject(this.scene);
 	}
 	getSceneName() {
-		return this.font.names.fullName.en + '_' + this.text.replace(/[^A-Za-z0-9]/g, '').substring(0, 5);
+		return this.fontProvider.getFontName() + '_' + this.text.replace(/[^A-Za-z0-9]/g, '').substring(0, 5);
 	}
 	getMeshByName(name) {
 		return this.meshes.find(m => m.name === name);
@@ -159,12 +194,17 @@ class App {
 		});
 	}
 	async render() {
+		const renderCfgStr = JSON.stringify(app.cfg) + '|' + this.fontPath + '|' + this.builtText;
+		if (renderCfgStr === app.lastRenderCfg) {
+			console.log('no need to re-render, no cfg change');
+			return;
+		}
+		app.lastRenderCfg = renderCfgStr;
 		/*
 		 * SECTION: Prepare for rendering
 		 */
-		await this.fontProvider.load(this.fontPath);
+		await this.fontProvider.load(this.fontPath, this.cfg.fontFileName);
 		await this.loadPlainFont();
-		elements.currFont.textContent = this.font.names.fullName.en;
 		if (this.initialised) {
 			this.emptyScene();
 			this.#_render();
@@ -177,20 +217,21 @@ class App {
 		/*
 		 * SECTION: Prepare text
 		 */
-		const originalTextValue = elements.textInput.value;
-		const lastChar = originalTextValue[originalTextValue.length - 1];
+		if (this.cfg.textOverride.trim() == this.builtText.trim()) this.cfg.textOverride = '';
+		const originalTextValue = this.cfg.textOverride || this.builtText;
 		const text = originalTextValue.trim();
 		const lines = text.split(/(\r?\n)+/).map(line => line.trim()).filter(line => !!line);
+		const prevText = this.text.trim();
 		this.text = lines.join('\n');
 		this.lines = lines;
 		this.chars = lines.flatMap(line => line.split(''));
-		elements.textInput.value = ['\n', ' '].includes(lastChar) ? this.text + lastChar : this.text;
-
-		previewSVG(lines, elements.svg);
+		if (this.text.trim() !== prevText) app.events.trigger('text:changed', this.text);
 
 		this.svgGroup = new THREE.Group();
 		const allLetters = Array.from(this.svgGroup.children).slice(0, 0);
 		const lineGroups = allLetters.slice();
+
+		this.events.trigger('render:started');
 
 		/*
 		 * SECTION: Create letters
@@ -270,14 +311,14 @@ class App {
 		}
 
 		tallestLetter *= ptSizeScale;
-		allLetters.forEach(letter => letter.scale.set(ptSizeScale, ptSizeScale, ptSizeScale));
+		allLetters.forEach(letter => letter.scale.set(ptSizeScale, ptSizeScale, 1));
 		const allSizes = allLetters.map(letter => getSize(letter));
 
 		/*
 		 * SECTION: Block height and line height
 		 */
 		const blockHeight = tallestLetter + blockYPadding;
-		const lineHeight = cfg.lineSpacing === 'auto' ? blockHeight * 1.15 : (blockHeight + cfg.lineSpacing);
+		const lineHeight = cfg.spacing.lineAuto ? blockHeight * 1.15 : (blockHeight + cfg.spacing.line);
 		this.blockHeight = blockHeight;
 		this.lineHeight = lineHeight;
 
@@ -293,7 +334,7 @@ class App {
 			shifted = 0;
 			letters.forEach((letter, i) => {
 				if (i === 0) return;
-				let shift = cfg.letterSpacing === 'auto' ? getSize(letter).x / 20 : cfg.letterSpacing;
+				let shift = cfg.spacing.letterAuto ? getSize(letter).x / 20 : cfg.spacing.letter;
 				if (!cfg.linoMode) shift += blockXPadding;
 				letter.translateX(shifted + shift);
 				shifted += shift;
@@ -326,6 +367,7 @@ class App {
 				let normPadding = normPadLeft + normPadRight;
 				normPadding += blockXPadding;
 				const blockMesh = blockMesh_tpl.clone();
+				blockMesh.material = blockMesh_tpl.material.clone();
 				blockMesh.scale.x = lineSize.x + normPadding;
 				const meshSize = getSize(blockMesh);
 				blockMesh.position.x = lineCenter.x;
@@ -368,6 +410,7 @@ class App {
 					let { normPadLeft, normPadding } = getGlyphInfo(letter.name, size);
 					normPadding += blockXPadding;
 					const blockMesh = blockMesh_tpl.clone();
+					blockMesh.material = blockMesh_tpl.material.clone();
 					blockMesh.scale.x = size.x + normPadding;
 					const meshSize = getSize(blockMesh);
 					blockMesh.position.x = letterCenter.x + (normPadding / 2) - normPadLeft - (blockXPadding / 2);
@@ -434,8 +477,8 @@ class App {
 		 * SECTION: Render and initialise
 		 */
 		this.#_render();
-		this.textEdit.onRender();
 		this.initialise();
+		this.events.trigger('render:complete');
 	}
 	#_render() {
 		if (!this.needsRedraw) return;
@@ -444,23 +487,16 @@ class App {
 	}
 	initialise() {
 		if (this.initialised) return;
-		this.textEdit.init();
 
 		const animate = () => {
 			const delta = clock.getDelta();
 			this.needsRedraw = this.cameraControls.update(delta) || this.needsRedraw;
-			this.needsRedraw = this.textEdit.renderCheck() || this.needsRedraw;
 			requestAnimationFrame(animate);
 			this.#_render();
 		};
 		animate();
 
-		window.addEventListener('resize', () => {
-			app.camera.aspect = window.innerWidth / window.innerHeight;
-			app.camera.updateProjectionMatrix();
-			app.renderer.setSize(window.innerWidth, window.innerHeight);
-			app.needsRedraw = true;
-		}, false);
+		window.addEventListener('resize', () => this.recalculateSize(), false);
 
 		this.interaction.init();
 		this.initialised = true;
@@ -469,6 +505,13 @@ class App {
 		this.cameraControls.saveState();
 		this.cameraControls.draggingSmoothTime = 0.1;
 		this.cameraControls.smoothTime = 0.1;
+	}
+	recalculateSize() {
+		const { width, height } = getViewportDims();
+		this.camera.aspect = width / height;
+		this.camera.updateProjectionMatrix();
+		this.renderer.setSize(width, height);
+		this.needsRedraw = true;
 	}
 	zoomToFit() {
 		this.cameraControls.fitToSphere(this.svgGroup, true);
@@ -480,40 +523,36 @@ class App {
 
 const app = new App();
 
-elements.textInput.addEventListener('input', () => {
-	app.render();
-});
+const reRender = throttle(() => app.render(), 100);
 
-app.events.on('cfg.updated', ({ path, value }) => {
-	if (app.cfg.textBuilder && path.startsWith('text.')) buildTextFromCfg();
-	if (path.startsWith('fountSchemes.')) buildTextFromSchemes().then(() => app.render());
-});
-
-enableExportScene(elements.exportButton, app);
-
-if (app.cfg.textBuilder) buildTextFromCfg();
-else buildTextFromSchemes();
-app.render();
-
-
-elements.resetViewBtn.addEventListener('click', () => app.resetView());
-elements.zoomFitBtn.addEventListener('click', () => app.zoomToFit());
-elements.editModeControl.addEventListener('change', ev => {
-	if (ev.target.value === 'text' && app.interaction.selectedChar) {
-		app.interaction.applySelection(app.interaction.selectedChar, false);
+app.events.on('cfg.updated', async ({ path, value }) => {
+	if (app.cfg.textBuilder && path.startsWith('text.')) buildTextFromCfg() && reRender();
+	else if (path.startsWith('fountSchemes.')) {
+		await buildTextFromSchemes().then(() => reRender());
+		app.events.trigger('fountSchemes:changed', app.cfg.fountSchemes);
 	}
-	app.cfg.editMode = ev.target.value;
-	if (app.cfg.editMode !== 'textarea') {
-		elements.editModeControl.classList.remove('show-text-input');
+	else if (path === 'textOverride') {
+		reRender();
 	}
 	else {
-		elements.editModeControl.classList.add('show-text-input');
-		app.cfg.editMode = 'text';
+		reRender();
 	}
-	app.canvas.focus();
-	app.needsRedraw = true;
 });
-app.textEdit.cursor.syncWith(elements.textInput);
+app.events.on('text:changed', () => {
+	const previewEl = document.querySelector('svg.preview');
+	if (!previewEl) return;
+	previewSVG(app.lines, previewEl);
+});
+app.events.on('control-pane:change', ({ action, name, container }) => {
+	if (action === 'show' && name === 'text') {
+		previewSVG(app.lines, container.querySelector('svg.preview'));
+	}
+});
+
+app.initText();
+app.render();
+
+window.app = app;
 
 // helpers
 function buildTextFromCfg() {
@@ -531,11 +570,12 @@ function buildTextFromCfg() {
 		const vowelRex = new RegExp('[aeiou' + (cfg.text.yIsVowel ? 'y' : '') + ']', 'ig');
 		fullValue = fullValue.replace(vowelRex, ($0) => new Array(cfg.text.vowelMult).fill($0).join(''));
 	}
-	return elements.textInput.value = fullValue;
+	return app.builtText = fullValue;
 }
 async function buildTextFromSchemes() {
 	const schemeSlugs = Object.keys(cfg.fountSchemes).filter(key => cfg.fountSchemes[key] === true);
 	const schemes = app.fountSchemes.filter(sch => schemeSlugs.includes(sch.slug));
+	await preloadSchemes();
 	await Promise.all(schemes.map(s => s.load()));
 	function charStr(char, count) {
 		let str = '';
@@ -561,7 +601,7 @@ async function buildTextFromSchemes() {
 	str = str.replace('9A', '9\nA');
 	const lines = str.split(/\r?\n/);
 	const fullValue = lines.join('\n');
-	return elements.textInput.value = fullValue;
+	return app.builtText = fullValue;
 }
 function buildSVGData(text, font) {
 	text = text.replace(/\s/g, ' ').trim();
@@ -635,6 +675,7 @@ function makeMaterial(colour = 0x666666, texture = '', bumpScale = 1) {
 		textureObj = new THREE.TextureLoader().load(texture);
 	}
 	return new THREE.MeshStandardMaterial({ color: colour, map: textureObj, ...(textureObj ? { bumpMap: textureObj, bumpScale } : {}) });
+	// return new THREE.MeshStandardMaterial({ color: colour, wireframe: true, map: textureObj, ...(textureObj ? { bumpMap: textureObj, bumpScale } : {}) });
 }
 function emptyObject(obj) {
 	while (obj.children.length > 0) obj.remove(obj.children[0]);
@@ -655,8 +696,8 @@ function debugBox(object, colour = 0xff0000) {
 function grooveMesh(mesh, meshSize, mat) {
 	if (!mat) mat = mesh.material.clone();
 	let geo = new THREE.BoxGeometry();
-	const size = cfg.groove.size === 'auto' ? meshSize.y / 3 : cfg.groove.size;
-	const depth = cfg.groove.depth === 'auto' ? meshSize.z / 20 : cfg.groove.depth;
+	const size = cfg.groove.sizeAuto ? meshSize.y / 3 : cfg.groove.size;
+	const depth = cfg.groove.depthAuto ? meshSize.z / 20 : cfg.groove.depth;
 	const depthPadding = 1;
 	let trapMult = 0;
 	switch (cfg.groove.shape) {
@@ -668,7 +709,7 @@ function grooveMesh(mesh, meshSize, mat) {
 			break;
 		case 'trapezoid':
 			let angle = 30, angleRads = 0;
-			if (cfg.groove.angle === 'auto') {
+			if (cfg.groove.angleAuto) {
 				angleRads = degreesToEuler(angle);
 				let bottomSize = size + (2 * Math.tan(angleRads) * depth);
 				if (bottomSize > app.blockHeight * 0.9) {
@@ -693,6 +734,7 @@ function grooveMesh(mesh, meshSize, mat) {
 	let cutoutSize = getSize(cutoutMesh);
 	cutoutMesh.position.copy(mesh.position);
 	cutoutMesh.position.z -= meshSize.z / 2;
+	const offset = cfg.groove.offsetAuto ? 0 : cfg.groove.offset;
 	if (cfg.groove.shape === 'trapezoid') {
 		const scaleDiffX = size / (cutoutSize.x / trapMult);
 		const scaleDiffY = size / (cutoutSize.z / trapMult);
@@ -700,7 +742,7 @@ function grooveMesh(mesh, meshSize, mat) {
 		cutoutSize = getSize(cutoutMesh);
 		cutoutMesh.position.z -= cutoutSize.y / 2;
 		cutoutMesh.position.z += depth;
-		cutoutMesh.position.y -= cfg.groove.offset;
+		cutoutMesh.position.y -= offset;
 		cutoutMesh.rotation.x = degreesToEuler(90);
 		const targetWidth = meshSize.x + 0.2;
 		const widthDiff = targetWidth / size;
@@ -710,7 +752,7 @@ function grooveMesh(mesh, meshSize, mat) {
 		cutoutMesh.position.z -= cutoutSize.z / 2;
 		cutoutMesh.position.z += depth;
 		cutoutMesh.rotation.z = degreesToEuler(90);
-		cutoutMesh.position.y -= cfg.groove.offset;
+		cutoutMesh.position.y -= offset;
 	}
 	cutoutMesh.updateMatrix();
 
@@ -724,12 +766,12 @@ function grooveMesh(mesh, meshSize, mat) {
 }
 function nickMesh(mesh, meshSize, mat) {
 	if (!mat) mat = mesh.material.clone();
-	const rad = cfg.nick.radius === 'auto' ? Math.min(1.5, meshSize.z / 8) : cfg.nick.radius;
+	const rad = cfg.nick.radiusAuto ? Math.min(1.5, meshSize.z / 8) : cfg.nick.radius;
 	const cylinder = new THREE.CylinderGeometry(rad, rad, meshSize.x * 1.1, 32);
 	const cylinderMesh = new THREE.Mesh(cylinder, mat);
 	cylinderMesh.position.copy(mesh.position);
-	cylinderMesh.position.z += cfg.nick.offset === 'auto' ? 0 : cfg.nick.offset;
-	const depth = (meshSize.y / 2) - (cfg.nick.depth === 'auto' ? 0 : cfg.nick.depth);
+	cylinderMesh.position.z += cfg.nick.offsetAuto ? 0 : cfg.nick.offset;
+	const depth = (meshSize.y / 2) - (cfg.nick.depthAuto ? 0 : cfg.nick.depth);
 	cylinderMesh.position.y += depth;
 	cylinderMesh.rotation.z = degreesToEuler(90);
 	cylinderMesh.updateMatrix();
