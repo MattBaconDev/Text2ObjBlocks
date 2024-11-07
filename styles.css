@@ -369,6 +369,24 @@ main {
 		display: none;
 	}
 
+	#control-pane #pane-about > h2 {
+		margin-bottom: 5px;
+	}
+	#control-pane #pane-about {
+		gap: 0;
+		line-height: 1.5;
+	}
+	#pane-about p + p {
+		margin-top: 2px;
+	}
+	#pane-about em {
+		font-weight: bold;
+		font-style: normal;
+	}
+	#pane-about a {
+		color: var(--highlight);
+	}
+
 #viewport {
 	flex: 1;
 	border-left: 1px solid #000;

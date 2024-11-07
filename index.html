@@ -15,6 +15,7 @@
 	</header>
 	<main>
 		<div id="side-pane">
+			<button type="button" class="icon-notification" title="About" data-action="pane:about"></button>
 			<button type="button" class="icon-cog" title="General" data-action="pane:general"></button>
 			<button type="button" class="icon-font-size" title="Font & Text" data-action="pane:text"></button>
 			<button type="button" class="icon-equalizer" title="Spacing, padding & depths" data-action="pane:spacing-sizing"></button>
@@ -263,6 +264,22 @@
 			<option value="">App default</option>
 		</select>
 		<button id="cfg-save" type="button" data-action="saveConfig">Save config as...</button>
+	</template>
+
+	<!-- PANE : About -->
+	<template id="tpl-pane-about">
+		<h2>About</h2>
+		<p>Please note: This tool is primarily for the letterpress industry and/or letterpress hobbyists. Some terminology may be confusing if this is not your field.</p>
+		<p>It was built to streamline the process of turning a font into a set of type blocks that can be used with printing presses.</p>
+		<h2 style="margin-top:20px; font-size:1.25rem;">Who's behind this?</h2>
+		<p>
+			<em>Matt Holmes</em> - The instigator of the project and brains behind the letterpress world.
+			<br><a target="_blank" href="https://holmesylogic.co.uk/">holmesylogic.co.uk</a>
+		</p>
+		<p>
+			<em>Matt Bacon</em> - The programmer that made the idea come to life in it's current form.
+			<br><a target="_blank" href="https://mdev.me">mdev.me</a>
+		</p>
 	</template>
 
 	<script type="importmap">
