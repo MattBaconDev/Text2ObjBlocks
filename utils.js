@@ -14,6 +14,10 @@ export function getSize(obj) {
 	return box.getSize(new THREE.Vector3());
 }
 
+export function isSpace(char) {
+	return ['\u0020', '\u2002', '\u2003', '\u2004', '\u2005', '\u2006'].includes(char);
+}
+
 export function setObjectPath(obj, path, value) {
 	const pathParts = path.split('.');
 	const last = pathParts.pop();
