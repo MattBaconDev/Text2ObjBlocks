@@ -8,7 +8,7 @@ import CameraControls from './libs/camera-controls.module.js';
 import { TextGeometry } from 'three/addons/geometries/TextGeometry.js';
 import { FontLoader } from 'three/addons/loaders/FontLoader.js';
 import { Events } from './events.js';
-import { getCenter, getSize, throttle } from './utils.js';
+import { getBox, getCenter, getSize, isSpace, throttle } from './utils.js';
 import { allFountSchemes, preloadSchemes } from './fount-schemes.js';
 import { init as initControls } from './controls.js';
 
@@ -218,15 +218,17 @@ class App {
 		/*
 		 * SECTION: Prepare text
 		 */
-		if (this.cfg.textOverride.trim() == this.builtText.trim()) this.cfg.textOverride = '';
+		if (this.cfg.textOverride == this.builtText) this.cfg.textOverride = '';
 		const originalTextValue = this.cfg.textOverride || this.builtText;
-		const text = originalTextValue.trim();
-		const lines = text.split(/(\r?\n)+/).map(line => line.trim()).filter(line => !!line);
-		const prevText = this.text.trim();
+		const usingBuiltText = originalTextValue === this.builtText;
+		const showSpaces = usingBuiltText;
+		const text = usingBuiltText ? originalTextValue : originalTextValue.trim();
+		const lines = text.split(/(\r?\n)+/).map(line => usingBuiltText ? line.replace(/\r?\n/g, '') : line.trim()).filter(line => !!line);
+		const prevText = this.text;
 		this.text = lines.join('\n');
 		this.lines = lines;
 		this.chars = lines.flatMap(line => line.split(''));
-		if (this.text.trim() !== prevText) app.events.trigger('text:changed', this.text);
+		if (this.text !== prevText) app.events.trigger('text:changed', this.text);
 
 		this.svgGroup = new THREE.Group();
 		const allLetters = Array.from(this.svgGroup.children).slice(0, 0);
@@ -241,14 +243,16 @@ class App {
 		let maxLetterY = 0;
 		let minLetterY = 0;
 		let charIdx = 0;
+		const spaceReplacement = this.text.split('').find(ch => ch.trim() !== '');
 		lines.forEach((line, lineIdx) => {
-			const svgData = buildSVGData(line.replace(/\s/g, '_'), this.font, elements.svg);
+			const svgData = buildSVGData(line.replace(/\s/g, spaceReplacement), this.font, elements.svg);
 			const lineLetters = [];
 			const lineGroup = new THREE.Group();
 			lineGroup.name = 'line_' + lineIdx;
 			svgData.paths.forEach((path, i) => {
 				const shapes = SVGLoader.createShapes(path);
 				const letterGeos = [];
+				const isSpaceChar = isSpace(line[i]);
 				shapes.forEach((shape, j) => {
 					const geometry = new THREE.ExtrudeGeometry(shape, {
 						depth: cfg.depth.letter + cfg.depth.overlap,
@@ -257,6 +261,11 @@ class App {
 					letterGeos.push(geometry);
 				});
 				const bufferGeo = BufferGeometryUtils.mergeGeometries(letterGeos, false);
+				if (isSpaceChar) {
+					const repWidth = this.font.getAdvanceWidth(spaceReplacement);
+					const targetWidth = this.font.getAdvanceWidth(line[i]);
+					bufferGeo.scale(targetWidth / repWidth, 1, 1);
+				}
 				const letterMesh = new THREE.Mesh(bufferGeo, this.letterMat.clone());
 				const letterSize = getSize(letterMesh);
 				letterMesh.name = getMeshName(this.chars, charIdx);
@@ -266,7 +275,9 @@ class App {
 				letterMesh.userData.type = 'char';
 				letterMesh.userData.isStartOfLine = i === 0;
 				letterMesh.userData.isEndOfLine = i === line.length - 1;
-				if (line[i] === ' ') {
+				// Check glyph has rightSideBearing data
+				getGlyph(letterMesh.name);
+				if (isSpaceChar) {
 					letterMesh.userData.isSpace = true;
 					letterMesh.material.visible = false;
 					letterMesh.userData.excludeFromExport = true;
@@ -420,8 +431,10 @@ class App {
 
 					blockMesh.userData.type = 'block';
 					blockMesh.name = 'block_' + letter.name;
-					blockMesh.material.visible = letter.material.visible;
-					if (letter.userData.excludeFromExport) blockMesh.userData.excludeFromExport = true;
+					if (letter.userData.isSpace) {
+						blockMesh.material.visible = showSpaces;
+						blockMesh.userData.excludeFromExport = !showSpaces;
+					}
 
 					const letterGroup = new THREE.Group();
 					letterGroup.name = 'letter_' + letter.name;
@@ -598,7 +611,8 @@ async function buildTextFromSchemes() {
 		if (charCount[0].toLowerCase() === ';') str += '\n';
 		if (charCount[0].toLowerCase() === poundSymbol) str += '\n';
 	}
-	if (str.trim().length === 0) {
+	str = str.replace(/^\r?\n|\r?\n$/g, '');
+	if (str.length === 0) {
 		str = cfg.defaultValue;
 	}
 	str = str.replace('9A', '9\nA');
@@ -607,7 +621,6 @@ async function buildTextFromSchemes() {
 	return app.builtText = fullValue;
 }
 function buildSVGData(text, font) {
-	text = text.replace(/\s/g, ' ').trim();
 	const paths = font.getPaths(text, 0, 0, cfg.fontSize).filter(p => p.commands.length);
 	const svgPaths = paths.map(p => p.toSVG()).join('');
 
