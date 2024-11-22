@@ -663,10 +663,15 @@ function drawText(text, position, size = 8) {
 function degreesToEuler(degrees) {
 	return degrees * Math.PI / 180;
 }
-function getGlyphInfo(char, size) {
+function getGlyph(char) {
 	const unicode = char.charCodeAt(0);
-	const glyph = Object.values(app.font.glyphs.glyphs).find(g => g.unicode === unicode);
-	if (!glyph.rightSideBearing) glyph.rightSideBearing = glyph.getMetrics().rightSideBearing;
+	let glyph = Object.values(app.font.glyphs.glyphs).find(g => g.unicode === unicode);
+	if (!glyph && isSpace(char[0])) glyph = Object.values(app.font.glyphs.glyphs).find(g => g.unicode === 32);
+	if (glyph && !glyph.rightSideBearing) glyph.rightSideBearing = glyph.getMetrics().rightSideBearing;
+	return glyph;
+}
+function getGlyphInfo(char, size) {
+	const glyph = getGlyph(char);
 	const normPadLeft = (glyph.leftSideBearing / (glyph.advanceWidth)) * size.x;
 	const normPadRight = (glyph.rightSideBearing / (glyph.advanceWidth)) * size.x;
 	const normPadding = normPadLeft + normPadRight;
