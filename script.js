@@ -625,7 +625,7 @@ async function buildTextFromSchemes() {
 		charCounts.push(...Object.entries(scheme.chars));
 	});
 	let str = '';
-	const poundSymbol = decodeURIComponent('%C2%A3');
+	const poundSymbol = '\u00A3';
 	for (const charCount of charCounts) {
 		str += charStr(...charCount);
 		if (charCount[0].toLowerCase() === 'm') str += '\n';
