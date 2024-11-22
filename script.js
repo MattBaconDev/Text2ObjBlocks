@@ -55,6 +55,7 @@ opqrstuvwxyz
 		'capital-3A': true,
 		'lower-3a': true,
 		'num-Numbers-1': true,
+		'other-Spaces-1': true,
 	},
 	depth: {
 		letter: 2,

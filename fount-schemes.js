@@ -49,10 +49,11 @@ const lower5a = new FountScheme('lower', '5a', 99);
 
 const num1 = new FountScheme('num', 'Numbers 1', 27);
 const num2 = new FountScheme('num', 'Numbers 2', 39);
+const spaces1 = new FountScheme('other', 'Spaces 1', 6);
 
 allFountSchemes.push(alnum);
 
 allFountSchemes.push(cap3A, cap4A, cap5A);
 allFountSchemes.push(lower3a, lower4a, lower5a);
 
-allFountSchemes.push(num1, num2);
+allFountSchemes.push(num1, num2, spaces1);
