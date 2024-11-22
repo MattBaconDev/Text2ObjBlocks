@@ -324,6 +324,28 @@ class App {
 
 		tallestLetter *= ptSizeScale;
 		allLetters.forEach(letter => letter.scale.set(ptSizeScale, ptSizeScale, 1));
+
+		/*
+		 * SECTION: Reset letter Spacing
+		 */
+		lineGroups.forEach(line => {
+			line.children.forEach((letter, li) => {
+				const prev = line.children[li - 1];
+				if (!prev) return;
+				const prevGlyph = getGlyph(prev.name);
+				const glyph = getGlyph(letter.name);
+				const prevBox = getBox(prev);
+				const box = getBox(letter);
+				const prevEnd = prevBox.getCenter(vec3()).x + prevBox.getSize(vec3()).x/2;
+				const start = box.getCenter(vec3()).x - box.getSize(vec3()).x/2;
+				const bearingPrev = (prevGlyph.rightSideBearing / prevGlyph.advanceWidth) * prevBox.getSize(vec3()).x;
+				const bearing = (glyph.leftSideBearing / glyph.advanceWidth) * box.getSize(vec3()).x;
+				letter.translateX(prevEnd - start);
+				letter.translateX(bearingPrev);
+				letter.translateX(bearing);
+			});
+		});
+
 		const allSizes = allLetters.map(letter => getSize(letter));
 
 		/*
