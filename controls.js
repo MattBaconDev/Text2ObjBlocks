@@ -269,11 +269,11 @@ export function init(app) {
 			const textInput = container.querySelector('#text-input');
 			if (textInput) {
 				function checkAsBuilt() {
-					const isAsBuilt = textInput.value.trim() === app.builtText.trim();
+					const isAsBuilt = textInput.value === app.builtText;
 					textInput.classList.toggle('as-built', isAsBuilt);
 				}
 				app.events.on('text:changed', text => {
-					if (text.trim() !== textInput.value.trim()) {
+					if (text !== textInput.value.replace(/ $/, '')) {
 						textInput.value = text;
 					}
 					checkAsBuilt();
