@@ -556,6 +556,8 @@ app.render();
 window.app = app;
 
 // helpers
+function vec2(x = 1, y = 1) { return new THREE.Vector2(x, y); }
+function vec3(x = 1, y = 1, z = 1) { return new THREE.Vector3(x, y, z); }
 function buildTextFromCfg() {
 	const upper = ['ABCDEFGHIJKLM', 'NOPQRSTUVWXYZ'];
 	const lower = ['abcdefghijklm', 'nopqrstuvwxyz'];
